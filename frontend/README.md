@@ -1,8 +1,35 @@
-# React + Vite
+# Site Monitor
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Site Monitor** is a powerful tool designed to help you monitor and manage the performance of websites in real time. It provides insights into site statistics, system alerts, configuration preferences, and more. The application also features login and signup capabilities to provide a personalized experience for users.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
+
+- **Real-time Site Statistics:** View detailed analytics about website performance.
+- **Alerts Management:** Receive and manage system alerts to stay updated on important issues.
+- **Settings Configuration:** Customize monitoring preferences according to your needs.
+- **User Authentication:** Secure login and signup for personalized access.
+- **Send Notification:** Automatically send notifications to users based on predefined criteria.
+
+---
+
+## Tech Stack
+
+- **Frontend:** React.js, Material Tailwind
+- **Backend:** Node.js 
+- **Styling:** Tailwind CSS
+- **Routing:** React Router
+
+---
+
+## Installation
+
+To get started with **Site Monitor**, follow the instructions below to set up the project locally:
+
+### Prerequisites
+
+Ensure you have the following installed:
+- **Node.js** (v14 or later)
+- **npm** or **yarn**
+
