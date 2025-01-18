@@ -96,7 +96,7 @@ async function handelSiteById(req, res) {
 }
 
 // Cron job to check all sites every 5 minutes
-cron.schedule("*/15 * * * *", async () => {
+cron.schedule("*/1 * * * *", async () => {
   try {
     const siteModel = model("site");
     const sites = await siteModel.find(); // Fetch all sites
@@ -215,10 +215,22 @@ async function handleEmailsend(req, res) {
   }
 }
 
+async function handlesiteHistory(req, res) {
+  try {
+    const id = req.params.id;
+    const responcetime = await Site.find({ _id: id }).sort({ responseTime: -1 }).limit(5);
+    const checkedAt = await Site.find({ _id: id }).sort({ checkedAt: 1 }).limit(5);
+    res.status(200).json({ responcetime, checkedAt });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+}
+
 module.exports = {
   handelResponceTime,
   getAllSites,
   handelAddSite,
   handelSiteById,
   handleEmailsend,
+  handlesiteHistory
 };

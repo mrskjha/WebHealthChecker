@@ -1,162 +1,139 @@
 import React, { useEffect, useState } from "react";
-import {
-  Card,
-  CardBody,
-  CardHeader,
-  Typography,
-} from "@material-tailwind/react";
+import { Card, CardBody, CardHeader, Typography } from "@material-tailwind/react";
 import { Square3Stack3DIcon } from "@heroicons/react/24/outline";
+import Chart from "react-apexcharts";
 
-// This chart will display the response time
-const chartConfig = {
+const initialChartConfig = {
   type: "line",
-  height: 240,
+  height: 400,
   series: [
     {
       name: "Response Time",
-      data: [], // Will store response time data dynamically
+      data: [], // Empty initially, will be updated
     },
   ],
   options: {
     chart: {
-      toolbar: {
-        show: false,
-      },
+      toolbar: { show: false },
     },
-    title: {
-      show: "",
-    },
-    dataLabels: {
-      enabled: false,
-    },
+    dataLabels: { enabled: false },
     colors: ["#020617"],
-    stroke: {
-      lineCap: "round",
-      curve: "smooth",
-    },
-    markers: {
-      size: 0,
-    },
+    stroke: { lineCap: "round", curve: "smooth" },
+    markers: { size: 0 },
     xaxis: {
-      axisTicks: {
-        show: false,
-      },
-      axisBorder: {
-        show: false,
-      },
-      labels: {
-        style: {
-          colors: "#616161",
-          fontSize: "12px",
-          fontFamily: "inherit",
-          fontWeight: 400,
-        },
-      },
-      categories: [
-        "Request 1",
-        "Request 2",
-        "Request 3",
-        "Request 4",
-        "Request 5",
-      ], // This can represent multiple API requests
+      axisTicks: { show: false },
+      axisBorder: { show: false },
+      labels: { style: { colors: "#616161", fontSize: "12px" } },
+      categories: [], // To be populated with the formatted checkedAt timestamps
     },
     yaxis: {
-      labels: {
-        style: {
-          colors: "#616161",
-          fontSize: "12px",
-          fontFamily: "inherit",
-          fontWeight: 400,
-        },
-      },
+      labels: { style: { colors: "#616161", fontSize: "12px" } },
     },
-    grid: {
-      show: true,
-      borderColor: "#dddddd",
-      strokeDashArray: 5,
-      xaxis: {
-        lines: {
-          show: true,
-        },
-      },
-      padding: {
-        top: 5,
-        right: 20,
-      },
-    },
-    fill: {
-      opacity: 0.8,
-    },
-    tooltip: {
-      theme: "dark",
-    },
+    grid: { borderColor: "#dddddd", strokeDashArray: 5 },
+    tooltip: { theme: "dark" },
   },
 };
 
 export default function ResponseTimeMonitor() {
-  const [responseTimes, setResponseTimes] = useState([]); // Store response times for multiple requests
-  const [lastResponseTime, setLastResponseTime] = useState(null); // Store the latest response time
+  const [chartConfig, setChartConfig] = useState(initialChartConfig);
+  const [lastResponseTimes, setLastResponseTimes] = useState([]);
+  const [status, setStatus] = useState("");
 
-  // Fetch data from backend and calculate response time
   useEffect(() => {
     const fetchResponseTime = async () => {
-      const startTime = performance.now(); // Capture start time before request
-
       try {
-        const response = await fetch("https://your-backend-api.com/api/monitor");
-        await response.json();
+        const response = await fetch(
+          "http://localhost:5000/api/sitehistory/67877738954ff359b5f0083e"
+        );
+        const data = await response.json();
 
-        const endTime = performance.now(); // Capture end time after request
+        if (data && data.responcetime?.length > 0) {
+          // Extract siteHistroy and sort by checkedAt date
+          const siteHistory = data.responcetime[0]?.siteHistroy || [];
+          const sortedHistory = [...siteHistory].sort(
+            (a, b) => new Date(a.checkedAt) - new Date(b.checkedAt)
+          );
+          const status = data.responcetime[0]?.status;
 
-        // Calculate the response time
-        const responseTime = (endTime - startTime).toFixed(2);
+          // Extract responseTimes and timestamps for the chart
+          const responseTimes = sortedHistory.map((entry) => entry.responseTime);
+          const timestamps = sortedHistory.map((entry) =>
+            new Date(entry.checkedAt).toLocaleString()
+          );
 
-        // Set the latest response time and update the response times array
-        setLastResponseTime(responseTime);
-        setResponseTimes((prevState) => [...prevState, responseTime]); // Store multiple response times
+          // Update chart config with new data
+          setChartConfig((prevConfig) => ({
+            ...prevConfig,
+            series: [{ name: "Response Time", data: responseTimes }],
+            options: {
+              ...prevConfig.options,
+              xaxis: { ...prevConfig.options.xaxis, categories: timestamps },
+            },
+          }));
+
+          // Set the last response times and timestamps to display as a list
+          setLastResponseTimes(
+            sortedHistory.map((entry) => ({
+              time: entry.responseTime,
+              timestamp: new Date(entry.checkedAt).toLocaleString(),
+            }))
+          );
+
+          setStatus(status);
+        }
       } catch (error) {
-        console.error("Error fetching data", error);
+        console.error("Error fetching data:", error);
       }
     };
 
     fetchResponseTime();
   }, []);
 
-  // Update chart data with the response times
-  chartConfig.series[0].data = responseTimes;
-
   return (
-    <Card>
-      <CardHeader
-        floated={false}
-        shadow={false}
-        color="transparent"
-        className="flex flex-col gap-4 rounded-none md:flex-row md:items-center"
-      >
-        <div className="w-max rounded-lg bg-gray-900 p-5 text-white">
-          <Square3Stack3DIcon className="h-6 w-6" />
-        </div>
-        <div>
-          <Typography variant="h6" color="blue-gray">
-            Response Time Monitor
-          </Typography>
-          <Typography
-            variant="small"
-            color="gray"
-            className="max-w-sm font-normal"
-          >
-            Monitor the response time of your API requests.
-          </Typography>
-        </div>
-      </CardHeader>
-      <CardBody className="px-2 pb-0">
-        <Chart {...chartConfig} />
-        {lastResponseTime && (
-          <Typography variant="small" color="gray" className="mt-4">
-            Last Response Time: {lastResponseTime} ms
-          </Typography>
+    <>
+      <Card>
+        <CardHeader
+          floated={false}
+          shadow={false}
+          color="transparent"
+          className="flex flex-col gap-4 rounded-none md:flex-row md:items-center"
+        >
+          <div className="w-max rounded-lg bg-gray-900 p-5 text-white">
+            <Square3Stack3DIcon className="h-6 w-6" />
+          </div>
+          <div>
+            <Typography variant="h6" color="blue-gray">
+              Response Time Monitor
+            </Typography>
+            <Typography variant="small" color="gray" className="max-w-sm font-normal">
+              Monitor the response of your Site.
+            </Typography>
+          </div>
+        </CardHeader>
+        <CardBody className="px-2 pb-0">
+          {/* Chart */}
+          <Chart {...chartConfig} />
+        </CardBody>
+      </Card>
+
+      <div>
+        <Typography variant="h6" color="blue-gray" className="mt-8">
+          Last Response Time
+        </Typography>
+        {lastResponseTimes.length > 0 && (
+          <div>
+            <p>
+              <strong>Response Time:</strong> {lastResponseTimes[lastResponseTimes.length - 1].time} ms
+            </p>
+            <p>
+              <strong>Timestamp:</strong> {lastResponseTimes[lastResponseTimes.length - 1].timestamp}
+            </p>
+            <p>
+              <strong>Status:</strong> {status}
+            </p>
+          </div>
         )}
-      </CardBody>
-    </Card>
+      </div>
+    </>
   );
 }
