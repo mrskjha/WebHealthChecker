@@ -2,9 +2,9 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "this is a website health checker is down or not",
-  "main": "index.js",
+  "main": "index.js ",
   "scripts": {
-    "start": "nodemon index.js node --trace-warnings ..."
+    "start": "nodemon index.js "
   },
   "author": "sunny jha",
   "license": "ISC",
