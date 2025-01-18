@@ -1,21 +1,57 @@
 import { useState } from "react";
-
 import { Typography, Input, Button } from "@material-tailwind/react";
 import { EyeSlashIcon, EyeIcon } from "@heroicons/react/24/solid";
-
+import { Link } from "react-router-dom";
+import ProtectedRoute from "../../uitls/ProtectedRoute";
 
 export function Login() {
   const [passwordShown, setPasswordShown] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-    
+
+
   const togglePasswordVisiblity = () => setPasswordShown((cur) => !cur);
 
+  const handleSubmitBtn = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/signin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
-  const handleSubmitBtn = () => {
-    console.log('Email:', email);
-    console.log('Password:', password);}
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
+      if(data.success){
+        setIsAuthenticated(true);
+        localStorage.setItem('isAuthenticated', true);
+        localStorage.setItem('token', data.token);
+        window.location.href = '/';
+        
+      }else{
+        if(data.error){
+          setError(data.error);
+
+      }  else{
+        setError('Login failed. Please check your credentials and try again.');
+      }
+
+
+      }
+    } catch (error) {
+      console.error('Login failed:', error);
+      setError('Login failed. Please check your credentials and try again.');
+    }
+  };
 
   return (
     <section className="grid text-center h-screen items-center p-8">
@@ -26,7 +62,7 @@ export function Login() {
         <Typography className="mb-16 text-gray-600 font-normal text-[18px]">
           Enter your email and password to sign in
         </Typography>
-        <form action="#" className="mx-auto max-w-[24rem] text-left">
+        <form action="#" className="mx-auto max-w-[24rem] text-left" onSubmit={(e) => e.preventDefault()}>
           <div className="mb-6">
             <label htmlFor="email">
               <Typography
@@ -56,7 +92,6 @@ export function Login() {
               <Typography
                 variant="small"
                 className="mb-2 block font-medium text-gray-900"
-                
               >
                 Password
               </Typography>
@@ -81,6 +116,11 @@ export function Login() {
               }
             />
           </div>
+          {error && (
+            <Typography color="red" className="mb-4">
+              {error}
+            </Typography>
+          )}
           <Button color="gray" size="lg" className="mt-6" fullWidth onClick={handleSubmitBtn}>
             sign in
           </Button>

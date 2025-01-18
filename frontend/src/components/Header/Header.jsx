@@ -25,6 +25,7 @@ import {
 } from "@heroicons/react/24/solid";
 import { Link } from "react-router-dom";
 
+
 const navListMenuItems = [
   {
     title: "Dashboard",
@@ -63,6 +64,12 @@ const navListMenuItems = [
     link: "/login",
   },
 ];
+
+function handleLogout() {
+  localStorage.removeItem('isAuthenticated');
+  localStorage.removeItem('token');
+  window.location.href = '/login';
+}
 
 function NavListMenu() {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
@@ -144,23 +151,24 @@ export function Header() {
   return (
     <Navbar className="mx-auto max-w-7xl px-4 py-2">
       <div className="flex items-center justify-between">
-        <Typography as={Link} to="/" variant="h5" className="font-bold">
+        <Typography as={Link} to="/" variant="h5" className="font-bold text-black">
           Site Monitor
         </Typography>
         <div className="hidden lg:flex">
           <NavList />
         </div>
         <div className="hidden lg:flex gap-2">
-          <Link to="/login">
-            <Button variant="outlined" size="sm">
-              Log In
+          {localStorage.getItem('isAuthenticated') ? (
+            <Button variant="gradient" size="sm" onClick={handleLogout}>
+              Logout
             </Button>
-          </Link>
-          <Link to="/signup">
-            <Button variant="gradient" size="sm">
-              Sign Up
-            </Button>
-          </Link>
+          ) : (
+            <Link to="/login">
+              <Button variant="outlined" size="sm">
+                Log In
+              </Button>
+            </Link>
+          )}
         </div>
         <IconButton
           variant="text"
@@ -177,16 +185,17 @@ export function Header() {
       <Collapse open={openNav}>
         <NavList />
         <div className="flex flex-col gap-2 lg:hidden">
-          <Link to="/login">
-            <Button variant="outlined" size="sm">
-              Log In
+          {localStorage.getItem('isAuthenticated') ? (
+            <Button variant="gradient" size="sm" onClick={handleLogout}>
+              Logout
             </Button>
-          </Link>
-          <Link to="/signup">
-            <Button variant="gradient" size="sm">
-              Sign Up
-            </Button>
-          </Link>
+          ) : (
+            <Link to="/login">
+              <Button variant="outlined" size="sm">
+                Log In
+              </Button>
+            </Link>
+          )}
         </div>
       </Collapse>
     </Navbar>

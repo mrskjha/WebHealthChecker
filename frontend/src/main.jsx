@@ -4,36 +4,17 @@ import "./index.css";
 
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "@material-tailwind/react";
-import Layout from "./Layout.jsx";
-import Home from "./components/Home/Home.jsx";
-import Login from "./components/Login/LoginForm.jsx";
-import Contact from "./components/Contact/Contact.jsx";
+import { AuthProvider } from "./uitls/AuthProvider"; // Correct path for AuthProvider
+import routes from "./uitls/Router"; // Correct path for Router
 
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <Layout />,
-    children: [
-      {
-        index: true, // Default route for "/"
-        element: <Home />,
-      },
-      {
-        path: "login",
-        element: <Login />,
-      },
-      {
-        path: "contact",
-        element: <Contact />,
-      }
-    ],
-  },
-]);
+const router = createBrowserRouter(routes);
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <ThemeProvider>
-      <RouterProvider router={router} />
-    </ThemeProvider>
+    <AuthProvider> {/* Ensure AuthProvider wraps the entire app */}
+      <ThemeProvider>
+        <RouterProvider router={router} />
+      </ThemeProvider>
+    </AuthProvider>
   </React.StrictMode>
 );

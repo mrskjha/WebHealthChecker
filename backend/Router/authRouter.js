@@ -22,7 +22,7 @@ router.post('/signup', async (req, res) => {
         if (existingUser) {
             return res.status(409).json({ error: "Username or email already exists" });
         }
-
+        
         const user = new User({
             username,
             email,
@@ -30,9 +30,11 @@ router.post('/signup', async (req, res) => {
             role
         });
 
+        const token = jwt.sign({ userId: user._id }, jwtkey, { expiresIn: '1h' });
+        user.token = token;
+
         await user.save();
 
-        const token = jwt.sign({ userId: user._id }, jwtkey, { expiresIn: '1h' });
         res.status(201).json({ message: "Signed up successfully!", token, success: true, user });
     } catch (err) {
         console.error("Signup Error:", err.message);
@@ -69,15 +71,17 @@ router.post('/signin', async (req, res) => {
         res.status(200).json({
             success: true,
             message: "Signed in successfully!",
+            token,
             user: {
                 id: user._id,
                 username: user.username,
                 email: user.email,
-                role: user.role
+                role: user.role,
+
             }
         });
-    } catch (err) {
-        console.error("Signin Error:", err.message); // Improved error logging
+    } catch (e){
+        // console.error("Signin Error:", e.message);
         res.status(500).json({ error: "Signin failed, please try again." });
     }
 });
