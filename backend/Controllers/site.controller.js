@@ -27,33 +27,42 @@ async function handelAddSite(req, res) {
 async function handelResponceTime(req, res) {
   const { url } = req.body;
 
+  // Validate URL
   if (!url || !validator.isURL(url)) {
     return res.status(400).json({ error: "Invalid URL" });
   }
 
   try {
     const site = model("site");
-    const start = Date.now(); // Start time
-    await axios.get(url); // Send request
+
+    // Start time for response measurement
+    const start = Date.now();
+    await axios.get(url); // Send GET request to the URL
     const responseTime = Date.now() - start; // Calculate response time
-    await site.updateMany(
+
+    // Update site document
+    updateSiteHistory(url, "up", responseTime);
+     await site.updateOne(
       { url },
       {
-        status: "up",
-        responseTime,
-        lastChecked: Date.now(),
-
+        $set: {
+          status: "up",
+          responseTime,
+          lastChecked: new Date(),
+        },
         $push: {
           siteHistroy: {
             status: "up",
             responseTime,
-            checkedAt: Date.now(),
+            checkedAt: new Date(),
           },
         },
       }
     );
 
-    // If a response object is provided, send the response
+    
+
+    // Respond to client
     if (res) {
       res.status(200).json({
         url,
@@ -62,24 +71,33 @@ async function handelResponceTime(req, res) {
       });
     }
   } catch (error) {
-    // Update the site status to "down" in case of an error
+    // Handle error (site is down)
     const site = model("site");
-    await site.updateMany(
+     await site.updateMany(
       { url },
       {
-        responseTime: 0,
-        status: "down",
-        lastChecked: Date.now(),
+        $set: {
+          status: "down",
+          responseTime: 0,
+          lastChecked: new Date(),
+        },
+        $push: {
+          siteHistroy: {
+            status: "down",
+            responseTime: 0,
+            checkedAt: new Date(),
+          },
+        },
       }
     );
 
-    // If a response object is provided, send the error response
+    // Respond to client with error details
     if (res) {
       res.status(500).json({
         url,
         responseTime: "0 ms",
         status: "down",
-        error: `Error: ${error.message} `,
+        error: error.message,
       });
     }
   }
@@ -95,8 +113,58 @@ async function handelSiteById(req, res) {
   }
 }
 
+const checkServiceStatus = async () => {
+  try {
+    const siteModel = model("site");
+    const sites = await siteModel.find();
+
+    
+
+    for (const site of sites) {
+
+      const { status, alertSent, url } = site;
+
+
+      if (status === "down" && !alertSent) {
+        console.log(`Service is down for ${url}. Sending alerts...`);
+        await sendAlertToAllUsers(url, false); // Pass false for "down"
+        await siteModel.updateOne({ url }, { $set: { alertSent: true } });
+      } else if (status === "up" && alertSent) {
+        console.log(`Service is up for ${url}. Sending alerts...`);
+        await sendAlertToAllUsers(url, true); // Pass true for "up"
+        await siteModel.updateOne({ url }, { $set: { alertSent: false } });
+      }
+    }
+
+    console.log("Service status check completed.");
+  } catch (error) {
+    console.error("Error during service status check:", error.message);
+  }
+};
+
+const sendAlertToAllUsers = async (siteUrl, isSiteUp) => {
+  try {
+    const userModel = model("User");
+    const users = await userModel.find();
+
+    for (let user of users) {
+      if (isSiteUp) {
+        // Notify users that the site is back up
+        console.log(`Sending "Site Up" email to ${user.email}`);
+        await sendsiteupEmail(user.email, user.username, siteUrl);
+      } else {
+        // Notify users that the site is down
+        console.log(`Sending "Site Down" email to ${user.email}`);
+        await sendSiteDownEmail(user.email, user.username, siteUrl);
+      }
+    }
+  } catch (error) {
+    console.error("Error sending alert to users:", error.message);
+  }
+};
+
 // Cron job to check all sites every 5 minutes
-cron.schedule("*/15 * * * *", async () => {
+cron.schedule("*/10 * * * *", async () => {
   try {
     const siteModel = model("site");
     const sites = await siteModel.find(); // Fetch all sites
@@ -108,6 +176,7 @@ cron.schedule("*/15 * * * *", async () => {
     }
 
     console.log("Site monitoring task completed successfully.");
+    await checkServiceStatus(); 
   } catch (error) {
     console.error("Error during site monitoring:", error.message);
   }
@@ -205,6 +274,36 @@ async function sendSiteDownEmail(userEmail, username, siteUrl) {
   }
 }
 
+async function sendsiteupEmail(userEmail, username, siteUrl) {
+  try {
+    const transporter = nodemailer.createTransport({
+      service: "gmail", // Using Gmail's service
+      secure: false, // Enable SSL (use secure port 465)
+      port: 465, // Secure port for Gmail
+      auth: {
+        user: "mrskjha30@gmail.com",
+        pass: "kclv rlaq qoby iwwu",
+      },
+    });
+
+    // Send mail
+    const info = await transporter.sendMail({
+      from: '"Maddison Foo Koch 👻" <mrskjha@gmail.com>', // Proper sender format
+      to: userEmail, // Correct email address format
+      subject: "Website Up Notification", // Subject line
+      text: "Hello world?", // Plain text body
+      html: `<p>Hello ${username},</p><p>Your website ${siteUrl} is back up.</p>`, // HTML body
+    });
+
+    console.log("Message sent: %s", info.messageId);
+    return { success: true, message: "Mail sent successfully" };
+  } catch (error) {
+    console.error("Error sending email:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+
 async function handleEmailsend(req, res) {
   try {
     const { userEmail, username, siteUrl } = req.body;
@@ -216,15 +315,45 @@ async function handleEmailsend(req, res) {
 }
 
 async function handlesiteHistory(req, res) {
-  try {
-    const id = req.params.id;
-    const responcetime = await Site.find({ _id: id }).sort({ responseTime: -1 }).limit(5);
-    const checkedAt = await Site.find({ _id: id }).sort({ checkedAt: 1 }).limit(5);
-    res.status(200).json({ responcetime, checkedAt });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
+  try{
+    const site = await Site.find();
+    res.status(200).json({ site });
+
+  }catch(error){
+    res.status(500).json({ error: error.message });
   }
 }
+
+const updateSiteHistory = async (url, status, responseTime) => {
+  try {
+    const result = await Site.updateOne(
+      { url }, // Match the document with the given URL
+      {
+        $set: {
+          status,
+          responseTime,
+          lastChecked: new Date(),
+        },
+        $push: {
+          siteHistory: {
+            status,
+            responseTime,
+            checkedAt: new Date(),
+          },
+        },
+      }
+    );
+
+    if (result.modifiedCount > 0) {
+      console.log("Successfully updated site history.");
+    } else {
+      console.log("No changes made. Please check if the site URL exists.");
+    }
+  } catch (error) {
+    console.error("Error updating site history:", error.message);
+  }
+};
+
 
 module.exports = {
   handelResponceTime,
@@ -232,5 +361,6 @@ module.exports = {
   handelAddSite,
   handelSiteById,
   handleEmailsend,
-  handlesiteHistory
+  handlesiteHistory,
+  updateSiteHistory
 };

@@ -9,7 +9,7 @@ const initialChartConfig = {
   series: [
     {
       name: "Response Time",
-      data: [], // Empty initially, will be updated
+      data: [],
     },
   ],
   options: {
@@ -24,7 +24,7 @@ const initialChartConfig = {
       axisTicks: { show: false },
       axisBorder: { show: false },
       labels: { style: { colors: "#616161", fontSize: "12px" } },
-      categories: [], // To be populated with the formatted checkedAt timestamps
+      categories: [],
     },
     yaxis: {
       labels: { style: { colors: "#616161", fontSize: "12px" } },
@@ -38,30 +38,31 @@ export default function ResponseTimeMonitor() {
   const [chartConfig, setChartConfig] = useState(initialChartConfig);
   const [lastResponseTimes, setLastResponseTimes] = useState([]);
   const [status, setStatus] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchResponseTime = async () => {
       try {
+        setLoading(true);
         const response = await fetch(
-          "http://localhost:5000/api/sitehistory/67877738954ff359b5f0083e"
+          "http://localhost:5000/api/sitehistory/678cf88b62e252cd9c60e66a"
         );
         const data = await response.json();
-
-        if (data && data.responcetime?.length > 0) {
-          // Extract siteHistroy and sort by checkedAt date
-          const siteHistory = data.responcetime[0]?.siteHistroy || [];
+  
+        if (data && data.site && data.site.length > 0) {
+          // Assuming `data.site[0].siteHistory` contains the history you want
+          const siteHistory = data.site[0]?.siteHistory || [];
           const sortedHistory = [...siteHistory].sort(
             (a, b) => new Date(a.checkedAt) - new Date(b.checkedAt)
           );
-          const status = data.responcetime[0]?.status;
-
-          // Extract responseTimes and timestamps for the chart
-          const responseTimes = sortedHistory.map((entry) => entry.responseTime);
-          const timestamps = sortedHistory.map((entry) =>
+  
+          // Extract response times and timestamps
+          const responseTimes = sortedHistory.map(entry => entry.responseTime);
+          const timestamps = sortedHistory.map(entry =>
             new Date(entry.checkedAt).toLocaleString()
           );
-
-          // Update chart config with new data
+  
+          // Update chart config
           setChartConfig((prevConfig) => ({
             ...prevConfig,
             series: [{ name: "Response Time", data: responseTimes }],
@@ -70,24 +71,30 @@ export default function ResponseTimeMonitor() {
               xaxis: { ...prevConfig.options.xaxis, categories: timestamps },
             },
           }));
-
-          // Set the last response times and timestamps to display as a list
+  
+          // Set last response times data for display
           setLastResponseTimes(
             sortedHistory.map((entry) => ({
               time: entry.responseTime,
               timestamp: new Date(entry.checkedAt).toLocaleString(),
             }))
           );
-
-          setStatus(status);
+  
+          // Set the current status for the last checked site
+          setStatus(data.site[0]?.status);
+        } else {
+          console.warn("No site history data available.");
         }
       } catch (error) {
         console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
       }
     };
-
+  
     fetchResponseTime();
   }, []);
+  
 
   return (
     <>
@@ -106,13 +113,18 @@ export default function ResponseTimeMonitor() {
               Response Time Monitor
             </Typography>
             <Typography variant="small" color="gray" className="max-w-sm font-normal">
-              Monitor the response of your Site.
+              Monitor the response of your site.
             </Typography>
           </div>
         </CardHeader>
         <CardBody className="px-2 pb-0">
-          {/* Chart */}
-          <Chart {...chartConfig} />
+          {loading ? (
+            <Typography variant="small" color="gray">
+              Loading data...
+            </Typography>
+          ) : (
+            <Chart {...chartConfig} />
+          )}
         </CardBody>
       </Card>
 
@@ -120,7 +132,7 @@ export default function ResponseTimeMonitor() {
         <Typography variant="h6" color="blue-gray" className="mt-8">
           Last Response Time
         </Typography>
-        {lastResponseTimes.length > 0 && (
+        {lastResponseTimes.length > 0 ? (
           <div>
             <p>
               <strong>Response Time:</strong> {lastResponseTimes[lastResponseTimes.length - 1].time} ms
@@ -132,6 +144,10 @@ export default function ResponseTimeMonitor() {
               <strong>Status:</strong> {status}
             </p>
           </div>
+        ) : (
+          <Typography variant="small" color="gray">
+            No data available to display.
+          </Typography>
         )}
       </div>
     </>
