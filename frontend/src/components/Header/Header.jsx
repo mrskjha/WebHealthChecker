@@ -25,13 +25,12 @@ import {
 } from "@heroicons/react/24/solid";
 import { Link } from "react-router-dom";
 
-
 const navListMenuItems = [
   {
-    title: "Dashboard",
-    description: "View real-time site statistics and analytics.",
+    title: "Add Users",
+    description: "Add users to the monitoring system.",
     icon: ChartBarIcon,
-    link: "/dashboard",
+    link: "/userdataform",
   },
   {
     title: "Alerts",
@@ -45,30 +44,12 @@ const navListMenuItems = [
     icon: Cog6ToothIcon,
     link: "/settings",
   },
-  {
-    title: "About",
-    description: "Learn more about the Site Monitor project.",
-    icon: InformationCircleIcon,
-    link: "/about",
-  },
-  {
-    title: "Contact",
-    description: "Get in touch with the Site Monitor team.",
-    icon: InformationCircleIcon,
-    link: "/contact",
-  },
-  {
-    title: "Login",
-    description: "Sign in to your account.",
-    icon: InformationCircleIcon,
-    link: "/login",
-  },
 ];
 
 function handleLogout() {
-  localStorage.removeItem('isAuthenticated');
-  localStorage.removeItem('token');
-  window.location.href = '/login';
+  localStorage.removeItem("isAuthenticated");
+  localStorage.removeItem("token");
+  window.location.href = "/login";
 }
 
 function NavListMenu() {
@@ -131,6 +112,9 @@ function NavList() {
       <Typography as={Link} to="/" className="font-medium">
         <ListItem className="py-2">Home</ListItem>
       </Typography>
+      <Typography as={Link} to="/dashboard" className="font-medium">
+        <ListItem className="py-2">Dashboard</ListItem>
+      </Typography>
       <NavListMenu />
       <Typography as={Link} to="/contact" className="font-medium">
         <ListItem className="py-2">Contact</ListItem>
@@ -151,14 +135,19 @@ export function Header() {
   return (
     <Navbar className="mx-auto max-w-7xl px-4 py-2">
       <div className="flex items-center justify-between">
-        <Typography as={Link} to="/" variant="h5" className="font-bold text-black">
+        <Typography
+          as={Link}
+          to="/"
+          variant="h5"
+          className="font-bold text-black"
+        >
           Site Monitor
         </Typography>
         <div className="hidden lg:flex">
           <NavList />
         </div>
         <div className="hidden lg:flex gap-2">
-          {localStorage.getItem('isAuthenticated') ? (
+          {localStorage.getItem("isAuthenticated") ? (
             <Button variant="gradient" size="sm" onClick={handleLogout}>
               Logout
             </Button>
@@ -185,7 +174,7 @@ export function Header() {
       <Collapse open={openNav}>
         <NavList />
         <div className="flex flex-col gap-2 lg:hidden">
-          {localStorage.getItem('isAuthenticated') ? (
+          {localStorage.getItem("isAuthenticated") ? (
             <Button variant="gradient" size="sm" onClick={handleLogout}>
               Logout
             </Button>

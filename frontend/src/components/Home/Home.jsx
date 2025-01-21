@@ -8,6 +8,8 @@ import {
   Input,
 } from "@material-tailwind/react";
 
+
+
 function Home() {
   const [open, setOpen] = React.useState(false);
   const handleOpen = () => setOpen((cur) => !cur);
@@ -22,8 +24,8 @@ function Home() {
   return (
     <>
       {/* Header Section */}
-      <header className="bg-white p-8">
-        <div className="grid mt-16 min-h-[82vh] w-full lg:h-[54rem] md:h-[34rem] place-items-stretch bg-[url('/image/bg-monitoring.svg')] bg-center bg-cover bg-no-repeat">
+      <header className="bg-white p-20 h-[32rem] lg:h-[40rem]">
+        <div className="grid mt-20 min-h-[82vh] w-full lg:h-[54rem] md:h-[34rem] place-items-stretch bg-[url('/image/bg-monitoring.svg')] bg-center bg-cover bg-no-repeat">
           <div className="container mx-auto px-4 text-center">
             <Typography className="inline-flex text-xs rounded-lg border-[1.5px] border-blue-gray-50 bg-white py-1 lg:px-4 px-1 font-medium text-primary">
               Real-Time Monitoring is Here!
@@ -58,7 +60,7 @@ function Home() {
       </header>
 
       {/* Feature Section (Optional, for more context) */}
-      <section className="bg-gray-100 py-12">
+      <section className="bg-gray-100 py-12 ">
         <div className="container mx-auto text-center">
           <Typography variant="h3" className="text-3xl font-bold text-gray-800">
             Key Features of Site Monitor
@@ -91,7 +93,9 @@ function Home() {
           </div>
         </div>
       </section>
+      
     </>
+
   );
 }
 

@@ -3,6 +3,7 @@ const { model } = require("mongoose");
 const validator = require("validator");
 const cron = require("node-cron");
 const nodemailer = require("nodemailer");
+const userData = require('../model/userdata');
 
 const Site = model("site");
 
@@ -144,8 +145,9 @@ const checkServiceStatus = async () => {
 
 const sendAlertToAllUsers = async (siteUrl, isSiteUp) => {
   try {
-    const userModel = model("User");
-    const users = await userModel.find();
+    // const userModel = model("User");
+    const userData = model("userdata");
+    const users = await userData.find();
 
     for (let user of users) {
       if (isSiteUp) {
@@ -164,7 +166,7 @@ const sendAlertToAllUsers = async (siteUrl, isSiteUp) => {
 };
 
 // Cron job to check all sites every 5 minutes
-cron.schedule("*/10 * * * *", async () => {
+cron.schedule("*/1 * * * *", async () => {
   try {
     const siteModel = model("site");
     const sites = await siteModel.find(); // Fetch all sites

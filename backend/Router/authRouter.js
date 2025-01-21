@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const User = require('../model/user'); // Ensure this path is correct
+const { handleAddUserData } = require('../Controllers/userData');
 const jwtkey = process.env.jwtkey;
 if (!jwtkey) {
     console.error("jwtkey is not defined in the environment variables");
@@ -85,5 +86,7 @@ router.post('/signin', async (req, res) => {
         res.status(500).json({ error: "Signin failed, please try again." });
     }
 });
+
+router.post("/adduserdata",handleAddUserData);
 
 module.exports = router;
