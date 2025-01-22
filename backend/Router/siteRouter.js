@@ -8,6 +8,7 @@ router.post("/site", handelAddSite);
 router.get("/site", getAllSites);
 router.patch("/site/:id", handelResponceTime);
 router.get("/site/:id", handelSiteById);
+router.get("/site/response-time/:id", handelSiteById);
 
 router.post("/sendmail", handleEmailsend);
 

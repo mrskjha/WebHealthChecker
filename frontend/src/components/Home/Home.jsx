@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Navbar,
   Collapse,
@@ -8,18 +8,83 @@ import {
   Input,
 } from "@material-tailwind/react";
 
-
-
 function Home() {
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
+  const [url, setUrl] = useState("");
+  const [siteId, setSiteId] = useState(""); // Site ID state
+  const [error, setError] = useState(null); // Error state to manage API errors
+
   const handleOpen = () => setOpen((cur) => !cur);
 
-  React.useEffect(() => {
-    window.addEventListener(
-      "resize",
-      () => window.innerWidth >= 960 && setOpen(false),
-    );
+  // Close the menu on large screens
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 960) {
+        setOpen(false);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize); // Cleanup
   }, []);
+
+  // Fetch site data when the page loads
+  useEffect(() => {
+    const fetchSiteData = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/site");
+        if (!response.ok) {
+          throw new Error("Failed to fetch site data");
+        }
+
+        const data = await response.json();
+
+        // Check if 'newSite' exists in the response and set site ID
+        if (data && data.newSite && data.newSite._id) {
+          setSiteId(data.newSite._id);
+        } else {
+          setError("Site data is missing or incomplete.");
+        }
+      } catch (error) {
+        setError("Error fetching site data: " + error.message);
+      }
+    };
+
+    fetchSiteData();
+  }, []); // Empty dependency array to fetch only once on component mount
+
+  // Handle the Site Monitor button click
+  const handleSiteMonitor = async () => {
+    setError(null); // Reset any previous errors
+
+    // Check if the URL input is empty
+    if (!url) {
+      setError("Please enter a valid URL to monitor.");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:5000/api/site", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url }),
+      });
+
+      const data = await response.json();
+
+      // Handle errors if response does not contain site data
+      if (data && data.newSite && data.newSite._id) {
+        setSiteId(data.newSite._id); // Set the site ID from the response
+      } else {
+        setError("Failed to create the site, please try again.");
+      }
+    } catch (error) {
+      console.error("Error creating site:", error);
+      setError("An error occurred while creating the site. Please try again.");
+    }
+  };
 
   return (
     <>
@@ -36,31 +101,50 @@ function Home() {
               className="mx-auto my-6 w-full leading-snug text-2xl lg:max-w-3xl lg:text-5xl"
             >
               Track and Monitor Site Performance{" "}
-              <span className="text-green-500">in Real-Time</span> with Site Monitor.
+              <span className="text-green-500">in Real-Time</span> with Site
+              Monitor.
             </Typography>
             <Typography
               variant="lead"
               className="mx-auto w-full !text-gray-500 lg:text-lg text-base"
             >
-              Monitor uptime, traffic, and system alerts effortlessly. Stay informed about your site's health.
+              Monitor uptime, traffic, and system alerts effortlessly. Stay
+              informed about your site's health.
             </Typography>
             <div className="mt-8 grid w-full place-items-start md:justify-center">
               <div className="mb-2 flex w-full flex-col gap-4 md:flex-row">
-                <Input color="gray" label="Enter your email to start monitoring" size="lg" />
+                <Input
+                  color="gray"
+                  label="Enter your website url to start monitoring"
+                  size="lg"
+                  value={url}
+                  onChange={(e) => {
+                    setUrl(e.target.value);
+                  }}
+                />
                 <Button
                   color="blue"
                   className="w-full px-4 md:w-[12rem]"
+                  onClick={handleSiteMonitor}
                 >
                   Get Started
                 </Button>
               </div>
             </div>
+            {error && (
+              <Typography className="mt-4 text-red-500">{error}</Typography>
+            )}
+            {siteId && (
+              <Typography className="mt-4 text-green-500">
+                Site ID: {siteId}
+              </Typography>
+            )}
           </div>
         </div>
       </header>
 
-      {/* Feature Section (Optional, for more context) */}
-      <section className="bg-gray-100 py-12 ">
+      {/* Feature Section */}
+      <section className="bg-gray-100 py-12">
         <div className="container mx-auto text-center">
           <Typography variant="h3" className="text-3xl font-bold text-gray-800">
             Key Features of Site Monitor
@@ -79,7 +163,8 @@ function Home() {
                 Automated Alerts
               </Typography>
               <Typography className="text-gray-600 mt-2">
-                Get notified instantly if your site experiences any issues or downtime.
+                Get notified instantly if your site experiences any issues or
+                downtime.
               </Typography>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-md">
@@ -87,15 +172,14 @@ function Home() {
                 Easy Dashboard
               </Typography>
               <Typography className="text-gray-600 mt-2">
-                View all your monitoring data at a glance with an intuitive dashboard.
+                View all your monitoring data at a glance with an intuitive
+                dashboard.
               </Typography>
             </div>
           </div>
         </div>
       </section>
-      
     </>
-
   );
 }
 
