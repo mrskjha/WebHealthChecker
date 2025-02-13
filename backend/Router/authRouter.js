@@ -11,9 +11,9 @@ if (!jwtkey) {
 const router = express.Router();
 
 router.post('/signup', async (req, res) => {
-    const { username, email, password, role } = req.body;
+    const { username, email, password, role,url } = req.body;
 
-    if (!username || !email || !password || !role) {
+    if (!username || !email || !password || !role || !url) {
         return res.status(422).json({ error: "Please provide all the required fields" });
     }
 
@@ -28,13 +28,22 @@ router.post('/signup', async (req, res) => {
             username,
             email,
             password,
-            role
+            role,
+            url
         });
-
-        const token = jwt.sign({ userId: user._id }, jwtkey, { expiresIn: '1h' });
-        user.token = token;
-
         await user.save();
+        // Generate JWT token
+        const token = jwt.sign({ userId: user._id }, process.env.jwtkey, { expiresIn: "1h" });
+
+        
+        // Set the token as a cookie
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "Strict",
+            maxAge: 3600000, // 1 hour
+        });
+  
 
         res.status(201).json({ message: "Signed up successfully!", token, success: true, user });
     } catch (err) {
@@ -44,31 +53,36 @@ router.post('/signup', async (req, res) => {
 });
 
 // Example signin route
-router.post('/signin', async (req, res) => {
+router.post("/signin", async (req, res) => {
     const { email, password } = req.body;
-
     // Validate required fields
     if (!email || !password) {
         return res.status(422).json({ error: "Please provide email and password" });
     }
-
     try {
         // Find the user and verify the password
         const user = await User.findOne({ email });
         if (!user || !(await user.comparePassword(password))) {
-            return res.status(401).json({ success: false, error: 'Invalid credentials' });
+            return res.status(401).json({ success: false, error: "Invalid credentials" });
+        }
+
+        // Ensure JWT_KEY is defined
+        const jwtKey = process.env.jwtKey;
+        if (!jwtKey) {
+            return res.status(500).json({ error: "Server configuration error: JWT_KEY missing" });
         }
 
         // Generate JWT token
-        const token = jwt.sign({ userId: user._id }, jwtkey, { expiresIn: '1h' });
+        const token = jwt.sign({ userId: user._id }, jwtKey, { expiresIn: "1h" });
 
         // Set the token as a cookie
-        res.cookie('token', token, {
+        res.cookie("token", token, {
             httpOnly: true, // Prevents client-side access
-            secure: process.env.NODE_ENV === 'production', // True in production
+            secure: process.env.NODE_ENV === "production", // True in production
             maxAge: 3600000, // 1 hour
         });
 
+        // Send response
         res.status(200).json({
             success: true,
             message: "Signed in successfully!",
@@ -78,14 +92,15 @@ router.post('/signin', async (req, res) => {
                 username: user.username,
                 email: user.email,
                 role: user.role,
-
-            }
+                url: user.url, // Ensure `url` exists in your User model
+            },
         });
-    } catch (e){
-        // console.error("Signin Error:", e.message);
+    } catch (e) {
+        console.error("Signin Error:", e.message);
         res.status(500).json({ error: "Signin failed, please try again." });
     }
 });
+
 
 router.post("/adduserdata",handleAddUserData);
 

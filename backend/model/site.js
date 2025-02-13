@@ -1,20 +1,19 @@
 const mongoose = require("mongoose");
-
 const Schema = new mongoose.Schema({
   url: {
     type: String,
     required: true,
-    unique: true, // Prevent duplicate URLs
+    unique: true,
   },
   status: {
     type: String,
     default: "unknown",
-    enum: ["up", "down", "unknown"], // Restrict to valid values
+    enum: ["up", "down", "unknown"],
   },
   responseTime: {
     type: Number,
     default: 0,
-    min: 0, // Ensure no negative values
+    min: 0, 
   },
   lastChecked: {
     type: Date,

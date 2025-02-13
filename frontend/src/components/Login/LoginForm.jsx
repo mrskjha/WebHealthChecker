@@ -1,17 +1,15 @@
 import { useState } from "react";
 import { Typography, Input, Button } from "@material-tailwind/react";
 import { EyeSlashIcon, EyeIcon } from "@heroicons/react/24/solid";
-import { Link } from "react-router-dom";
+import { Link ,useNavigate} from "react-router-dom";
 import ProtectedRoute from "../../uitls/ProtectedRoute";
-
 export function Login() {
   const [passwordShown, setPasswordShown] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-
+  const navigate = useNavigate(); 
 
   const togglePasswordVisiblity = () => setPasswordShown((cur) => !cur);
 
@@ -21,6 +19,7 @@ export function Login() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          "Authorization": `Bearer ${localStorage.getItem('token') || ''}`,
         },
         body: JSON.stringify({ email, password }),
       });
@@ -31,11 +30,13 @@ export function Login() {
       }
 
       const data = await response.json();
+      // console.log(data);
       if(data.success){
         setIsAuthenticated(true);
-        localStorage.setItem('isAuthenticated', true);
+        localStorage.setItem('isAuthenticated', "true"); // ✅ Store as a string
         localStorage.setItem('token', data.token);
-        window.location.href = '/';
+        navigate('/'); // ✅ Prevent full page reload
+
         
       }else{
         if(data.error){

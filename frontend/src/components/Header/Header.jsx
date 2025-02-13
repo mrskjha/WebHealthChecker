@@ -23,14 +23,15 @@ import {
   Cog6ToothIcon,
   InformationCircleIcon,
 } from "@heroicons/react/24/solid";
-import { Link } from "react-router-dom";
+import { Link,useNavigate } from "react-router-dom";
+
 
 const navListMenuItems = [
   {
     title: "Add Users",
     description: "Add users to the monitoring system.",
     icon: ChartBarIcon,
-    link: "/userdataform",
+    link: "/app/adduser",
   },
   {
     title: "Alerts",
@@ -44,13 +45,13 @@ const navListMenuItems = [
     icon: Cog6ToothIcon,
     link: "/settings",
   },
+  {
+    title: "About",
+    description: "Learn more about the monitoring system.",
+    icon: InformationCircleIcon,
+    link: "/about",
+  },
 ];
-
-function handleLogout() {
-  localStorage.removeItem("isAuthenticated");
-  localStorage.removeItem("token");
-  window.location.href = "/login";
-}
 
 function NavListMenu() {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
@@ -112,11 +113,11 @@ function NavList() {
       <Typography as={Link} to="/" className="font-medium">
         <ListItem className="py-2">Home</ListItem>
       </Typography>
-      <Typography as={Link} to="/dashboard" className="font-medium">
+      <Typography as={Link} to="/app/dashboard" className="font-medium">
         <ListItem className="py-2">Dashboard</ListItem>
       </Typography>
       <NavListMenu />
-      <Typography as={Link} to="/contact" className="font-medium">
+      <Typography as={Link} to="/app/contact" className="font-medium">
         <ListItem className="py-2">Contact</ListItem>
       </Typography>
     </List>
@@ -125,12 +126,18 @@ function NavList() {
 
 export function Header() {
   const [openNav, setOpenNav] = React.useState(false);
-
+  const navigate = useNavigate();
   React.useEffect(() => {
     window.addEventListener("resize", () => {
       if (window.innerWidth >= 960) setOpenNav(false);
     });
   }, []);
+
+  function handleLogout() {
+    localStorage.removeItem("isAuthenticated");
+    localStorage.removeItem("token");
+    navigate("/login"); // Use navigate instead of window.location.replace
+  }
 
   return (
     <Navbar className="mx-auto max-w-7xl px-4 py-2">

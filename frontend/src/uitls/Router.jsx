@@ -1,4 +1,5 @@
 import React from "react";
+import { Outlet } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
 import Home from "../components/Home/Home";
 import Login from "../components/Login/LoginForm";
@@ -8,50 +9,37 @@ import Layout from "../Layout";
 import SignUp from "../components/SignUp/SignUp";
 import UserDataForm from "../components/userDataForm/UserDataForm";
 
+const ProtectedLayout = () => (
+  <ProtectedRoute>
+    <Layout />
+  </ProtectedRoute>
+);
+
 const routes = [
   {
     path: "/",
-    element: <Layout />, // Wrap the layout for consistent header/footer handling
+    element: <Layout />, // Public layout
     children: [
-      {
-        path: "",
-        element: <Home />, // Home page will show header, hero, and footer
-      },
-      {
-        path: "dashboard",
-        element: (
-          <ProtectedRoute>
-            <Dashboard/>
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "contact",
-        element: (
-          <ProtectedRoute>
-            <Contact />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "userdataform",
-        element: (
-          <ProtectedRoute>
-            <UserDataForm/>
-          </ProtectedRoute>
-        ),
-      }
+      { path: "", element: <Home /> },
+      { path: "contact", element: <Contact /> }, // Contact is public
+    ],
+  },
+  {
+    path: "/app", // Protected routes under "/app"
+    element: <ProtectedLayout />,
+    children: [
+      { path: "dashboard", element: <Dashboard /> }, // Dashboard is protected
+      {path: "adduser", element: <UserDataForm /> }, // Add user is protected
     ],
   },
   {
     path: "/login",
-    element: <Login />, // Login page without header or footer
+    element: <Login />,
   },
   {
-    path:"/signup",
-    element: <SignUp />, // SignUp page without header or footer
-  }
+    path: "/signup",
+    element: <SignUp />,
+  },
 ];
-
 
 export default routes;

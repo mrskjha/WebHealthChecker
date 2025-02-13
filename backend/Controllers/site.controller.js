@@ -7,8 +7,10 @@ const userData = require('../model/userdata');
 
 const Site = model("site");
 
+
 async function handelAddSite(req, res) {
-  const { url } = req.body;
+  const user = req.user;
+  const url = user.url;
   try {
     const newSite = new Site({
       url,
@@ -21,7 +23,7 @@ async function handelAddSite(req, res) {
       res.status(200).json({ newSite });
     }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error :error.message });
   }
 }
 
@@ -106,13 +108,45 @@ async function handelResponceTime(req, res) {
 
 async function handelSiteById(req, res) {
   try {
-    const id = req.params.id;
-    const site = await Site.findById(id);
-    res.status(200).json({ site });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
+    // Check if user is attached from middleware
+    if (!req.user) {
+      return res.status(401).json({ error: "Unauthorized: No user found" });
+    }
+    const { url } = req.user; // Extract URL from user object
+
+    if (!url) {
+      return res.status(400).json({ error: "User does not have an associated URL" });
+    }
+
+    // Find site by URL
+    console.log(url);
+    const site = await Site.findOne({ url });
+
+    if (!site) {
+      return res.status(404).json({ error: "Site not found" });
+    }
+
+    res.status(200).json({ siteId: site._id, site });
+  } catch (error) {
+    console.error("Error fetching site:", error.message);
+    res.status(500).json({ error: "Server Error" });
   }
 }
+
+async function handleUserdetail(req, res) {
+  try {
+    const user = req.user; // authenticateUser middleware से मिला हुआ user
+
+    res.json({
+      id: user._id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      url: user.url,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
+  }}
 
 const checkServiceStatus = async () => {
   try {
@@ -166,7 +200,7 @@ const sendAlertToAllUsers = async (siteUrl, isSiteUp) => {
 };
 
 // Cron job to check all sites every 5 minutes
-cron.schedule("*/50 * * * *", async () => {
+cron.schedule("*/50* * * *", async () => {
   try {
     const siteModel = model("site");
     const sites = await siteModel.find(); // Fetch all sites
@@ -364,5 +398,6 @@ module.exports = {
   handelSiteById,
   handleEmailsend,
   handlesiteHistory,
-  updateSiteHistory
+  updateSiteHistory,
+  handleUserdetail
 };

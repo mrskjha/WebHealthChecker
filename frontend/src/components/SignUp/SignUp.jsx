@@ -5,6 +5,7 @@ const SignUp = () => {
   const [username, setuserName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [url, setUrl] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const handleSubmitBtn = async () => {
@@ -14,14 +15,13 @@ const SignUp = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username, email, password, role: "user" }),
+        body: JSON.stringify({ username, email, password, role: "user" ,url}),
       });
       const data = await responce.json();
       console.log(data);
       if (data.success) {
         setIsAuthenticated(true);
         localStorage.setItem("isAuthenticated", true);
-        localStorage.setItem("token", data.token);
         window.location.href = "/";
       } else {
         alert("Sign Up Failed");
@@ -66,6 +66,16 @@ const SignUp = () => {
                 placeholder="Your Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+            <div class="w-full max-w-sm min-w-[200px]">
+              <label class="block mb-2 text-sm text-slate-600">Site</label>
+              <input
+                type="site"
+                class="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow"
+                placeholder="Your Site"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
               />
             </div>
           </div>

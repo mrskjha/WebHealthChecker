@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Button, Card, CardBody, CardHeader, Input, Typography } from "@material-tailwind/react";
+import {
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  Input,
+  Typography,
+} from "@material-tailwind/react";
 import { Square3Stack3DIcon } from "@heroicons/react/24/outline";
 import Chart from "react-apexcharts";
 
@@ -38,20 +45,57 @@ export default function ResponseTimeMonitor() {
   const [chartConfig, setChartConfig] = useState(initialChartConfig);
   const [lastResponseTimes, setLastResponseTimes] = useState([]);
   const [status, setStatus] = useState("");
-  const [siteId, setSiteId] = useState(""); // Site ID state
 
-  // Fetch response time when siteId changes
-  useEffect(() => {
-    if (siteId) {
-      fetchResponseTime();
+  const addSite = async () => {
+    try {
+      const token = localStorage.getItem("token"); // Get token from local storage
+      console.log("Token:", token);
+      if (!token) {
+        console.error("No token found, please login.");
+        return;
+      }
+
+      const response = await fetch("http://localhost:5000/api/site", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // Attach token in headers
+        },
+        body: JSON.stringify({
+          // Replace with actual site data
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to add site");
+      }
+      console.log("Site added successfully", data);
+    } catch (error) {
+      console.error("Error adding site:", error.message);
     }
-  }, [siteId]);
+  };
 
   const fetchResponseTime = async () => {
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("No token found, please login.");
+        return;
+      }
       const response = await fetch(
-        `http://localhost:5000/api/site/response-time/${siteId}`
+        `http://localhost:5000/api/site/response-time/`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
+      if (!response.ok) {
+        throw new Error("Failed to fetch data");
+      }
       const data = await response.json();
 
       if (data && data.site) {
@@ -60,8 +104,8 @@ export default function ResponseTimeMonitor() {
           (a, b) => new Date(a.checkedAt) - new Date(b.checkedAt)
         );
 
-        const responseTimes = sortedHistory.map(entry => entry.responseTime);
-        const timestamps = sortedHistory.map(entry =>
+        const responseTimes = sortedHistory.map((entry) => entry.responseTime);
+        const timestamps = sortedHistory.map((entry) =>
           new Date(entry.checkedAt).toLocaleString()
         );
 
@@ -97,13 +141,6 @@ export default function ResponseTimeMonitor() {
       </CardHeader>
       <div className="mt-8 grid w-full place-items-start md:justify-center">
         <div className="mb-2 flex w-full flex-col gap-4 md:flex-row">
-          <Input
-            color="gray"
-            label="Enter your website ID to start monitoring"
-            size="lg"
-            value={siteId}
-            onChange={(e) => setSiteId(e.target.value)} // Handling input change
-          />
           <Button
             color="blue"
             className="w-full px-4 md:w-[12rem]"
@@ -111,13 +148,22 @@ export default function ResponseTimeMonitor() {
           >
             Get Started
           </Button>
+          <Button
+            color="blue"
+            className="w-full px-4 md:w-[12rem]"
+            onClick={addSite} // Trigger monitor based on URL input
+          >
+            Add
+          </Button>
         </div>
       </div>
 
       <CardBody>
         <div className="flex justify-between">
           <Typography>Status: {status}</Typography>
-          <Typography>Last Response Time: {lastResponseTimes[0]?.time} ms</Typography>
+          <Typography>
+            Last Response Time: {lastResponseTimes[0]?.time} ms
+          </Typography>
         </div>
         <Chart
           options={chartConfig.options}

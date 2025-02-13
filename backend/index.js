@@ -2,8 +2,9 @@ const express = require("express");
 const app = express();
 const connectDB = require("./Config/db");
 const cors = require("cors");
-const PORT = 5000;
 const bodyParser = require("body-parser");
+const cookieParser = require("cookie-parser");
+const PORT = 5000;
 
 connectDB();
 
@@ -18,7 +19,7 @@ const corsOptions = {
 
 app.use(cors(corsOptions)); // Enable CORS with options
 app.use(bodyParser.json());
-
+app.use(cookieParser());
 // Middleware to parse JSON and URL-encoded data
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
