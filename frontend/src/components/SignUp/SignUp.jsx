@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { use } from "react";
+
+import { useNavigate } from "react-router-dom";
 
 const SignUp = () => {
   const [username, setuserName] = useState("");
@@ -7,27 +8,69 @@ const SignUp = () => {
   const [password, setPassword] = useState("");
   const [url, setUrl] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const navigate = useNavigate();
+
 
   const handleSubmitBtn = async () => {
     try {
-      const responce = await fetch("http://localhost:5000/api/auth/signup", {
+      const response = await fetch("http://localhost:5000/api/auth/signup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username, email, password, role: "user" ,url}),
+        body: JSON.stringify({ username, email, password, role: "user", url }),
       });
-      const data = await responce.json();
+  
+      const data = await response.json();
       console.log(data);
-      if (data.success) {
+  
+      if (data.success && data.token) {
         setIsAuthenticated(true);
-        localStorage.setItem("isAuthenticated", true);
-        window.location.href = "/";
+        localStorage.setItem("isAuthenticated", "true");
+        localStorage.setItem("token", data.token);
+        alert("Sign Up Success");
+        navigate("/login");
+
       } else {
-        alert("Sign Up Failed");
+        alert(data.message || "Sign Up Failed");
       }
-    } catch (error) {}
+    } catch (error) {
+      console.error("Sign Up failed:", error);
+      alert("Sign Up failed. Please try again.");
+    }
   };
+
+  if(isAuthenticated) {
+    const addSite = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          console.error("No token found, please login.");
+          return;
+        }
+  
+        const response = await fetch("http://localhost:5000/api/site", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${localStorage.getItem('token') || ''}`,
+          },
+          body: JSON.stringify({}),
+        });
+  
+        if (!response.ok) {
+          throw new Error("Failed to add site");
+        }
+  
+        const data = await response.json();
+        console.log("Site added successfully", data);
+      } catch (error) {
+        console.error("Error adding site:", error.message);
+      }
+    };
+  }
+
+   
   return (
     <section className="grid text-center h-screen items-center ">
       <div class="relative flex flex-col rounded-xl bg-transparent">

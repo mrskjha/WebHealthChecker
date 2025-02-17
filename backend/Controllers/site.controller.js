@@ -200,7 +200,7 @@ const sendAlertToAllUsers = async (siteUrl, isSiteUp) => {
 };
 
 // Cron job to check all sites every 5 minutes
-cron.schedule("*/50* * * *", async () => {
+cron.schedule("*/50 * * * *", async () => {
   try {
     const siteModel = model("site");
     const sites = await siteModel.find(); // Fetch all sites

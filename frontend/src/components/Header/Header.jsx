@@ -23,8 +23,8 @@ import {
   Cog6ToothIcon,
   InformationCircleIcon,
 } from "@heroicons/react/24/solid";
-import { Link,useNavigate } from "react-router-dom";
-
+import { Link, useNavigate } from "react-router-dom";
+import UserMenu from "../UserMenu/UserMenu";
 
 const navListMenuItems = [
   {
@@ -120,6 +120,7 @@ function NavList() {
       <Typography as={Link} to="/app/contact" className="font-medium">
         <ListItem className="py-2">Contact</ListItem>
       </Typography>
+
     </List>
   );
 }
@@ -136,6 +137,7 @@ export function Header() {
   function handleLogout() {
     localStorage.removeItem("isAuthenticated");
     localStorage.removeItem("token");
+    localStorage.removeItem("chartData");
     navigate("/login"); // Use navigate instead of window.location.replace
   }
 
@@ -155,9 +157,12 @@ export function Header() {
         </div>
         <div className="hidden lg:flex gap-2">
           {localStorage.getItem("isAuthenticated") ? (
+            <div className="flex items-center mr-3 ">
+            <UserMenu />
             <Button variant="gradient" size="sm" onClick={handleLogout}>
               Logout
             </Button>
+            </div>
           ) : (
             <Link to="/login">
               <Button variant="outlined" size="sm">
@@ -182,9 +187,13 @@ export function Header() {
         <NavList />
         <div className="flex flex-col gap-2 lg:hidden">
           {localStorage.getItem("isAuthenticated") ? (
+            <div>
+            <UserMenu/>
             <Button variant="gradient" size="sm" onClick={handleLogout}>
               Logout
             </Button>
+            </div>
+
           ) : (
             <Link to="/login">
               <Button variant="outlined" size="sm">
