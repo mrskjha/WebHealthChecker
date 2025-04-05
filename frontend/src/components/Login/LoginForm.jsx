@@ -35,7 +35,11 @@ export function Login() {
         setIsAuthenticated(true);
         localStorage.setItem('isAuthenticated', "true"); // ✅ Store as a string
         localStorage.setItem('token', data.token);
-        navigate('/'); // ✅ Prevent full page reload
+        
+        navigate('/app/dashboard'); 
+      }else if(data.error === "Invalid credentials"){
+        setError("Invalid credentials. Please check your email and password.");
+        
 
         
       }else{

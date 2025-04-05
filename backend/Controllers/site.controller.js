@@ -200,14 +200,14 @@ const sendAlertToAllUsers = async (siteUrl, isSiteUp) => {
 };
 
 // Cron job to check all sites every 5 minutes
-cron.schedule("*/50 * * * *", async () => {
+cron.schedule("*/10 * * * *", async () => {
   try {
     const siteModel = model("site");
     const sites = await siteModel.find(); // Fetch all sites
 
     for (const site of sites) {
-      const req = { body: { url: site.url } }; // Mock request object
-      const res = null; // No need for a response object in the cron job
+      const req = { body: { url: site.url } };
+      const res = null; 
       await handelResponceTime(req, res);
     }
 
