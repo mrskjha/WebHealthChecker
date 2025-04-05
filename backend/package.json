@@ -4,7 +4,9 @@
   "description": "this is a website health checker is down or not",
   "main": "index.js ",
   "scripts": {
-    "start": "nodemon index.js "
+    "start": "node index.js ",
+    "dev": "node index.js",
+    "build": "node index.js"
   },
   "author": "sunny jha",
   "license": "ISC",
