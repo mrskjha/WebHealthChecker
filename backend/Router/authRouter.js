@@ -1,12 +1,12 @@
-require('dotenv').config();
-const express = require('express');
-const jwt = require('jsonwebtoken');
-const User = require('../model/user'); // Ensure this path is correct
-const { handleAddUserData } = require('../Controllers/userData');
+import dotenv from "dotenv";
+dotenv.config();
+import express from "express";
+import jwt from "jsonwebtoken";
+import User from "../model/user.js";
 const jwtkey = process.env.jwtkey;
 if (!jwtkey) {
-    console.error("jwtkey is not defined in the environment variables");
-    process.exit(1); // Exit if key is missing
+  console.error("jwtkey is not defined in the environment variables");
+  process.exit(1);
 }
 const router = express.Router();
 
@@ -23,7 +23,7 @@ router.post('/signup', async (req, res) => {
         if (existingUser) {
             return res.status(409).json({ error: "Username or email already exists" });
         }
-        
+
         const user = new User({
             username,
             email,
@@ -35,15 +35,13 @@ router.post('/signup', async (req, res) => {
         // Generate JWT token
         const token = jwt.sign({ userId: user._id }, process.env.jwtkey, { expiresIn: "1h" });
 
-        
         // Set the token as a cookie
         res.cookie("token", token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "Strict",
-            maxAge: 3600000, // 1 hour
+            maxAge: 3600000,
         });
-  
 
         res.status(201).json({ message: "Signed up successfully!", token, success: true, user });
     } catch (err) {
@@ -52,56 +50,92 @@ router.post('/signup', async (req, res) => {
     }
 });
 
-// Example signin route
-router.post("/signin", async (req, res) => {
-    const { email, password } = req.body;
-    // Validate required fields
-    if (!email || !password) {
-        return res.status(422).json({ error: "Please provide email and password" });
+router.get("/signout", (req, res) => {
+  res.clearCookie("token");
+  res.status(200).json({ message: "Signed out successfully!" });
+});
+
+router.get("/me",async (req,res)=>{
+  const token = req.cookies.token;
+  if (!token) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  try {
+    const decoded = jwt.verify(token, process.env.jwtkey);
+    const user = await User.findById(decoded.userId).select("-password");
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
     }
-    try {
-        // Find the user and verify the password
-        const user = await User.findOne({ email });
-        if (!user || !(await user.comparePassword(password))) {
-            return res.status(401).json({ success: false, error: "Invalid credentials" });
-        }
+    res.status(200).json({ user });
+  } catch (err) {
+    console.error("Me Error:", err.message);
+    res.status(401).json({ error: "Invalid token" });
+  }
+  
+});
 
-        // Ensure JWT_KEY is defined
-        const jwtKey = process.env.jwtKey;
-        if (!jwtKey) {
-            return res.status(500).json({ error: "Server configuration error: JWT_KEY missing" });
-        }
+router.post("/signup", async (req, res) => {
+  const { username, email, password, role } = req.body;
 
-        // Generate JWT token
-        const token = jwt.sign({ userId: user._id }, jwtKey, { expiresIn: "1h" });
+  if (!username || !email || !password || !role) {
+    return res.status(422).json({ error: "All fields required" });
+  }
 
-        // Set the token as a cookie
-        res.cookie("token", token, {
-            httpOnly: true, // Prevents client-side access
-            secure: process.env.NODE_ENV === "production", // True in production
-            maxAge: 3600000, // 1 hour
-        });
+  if (role !== "user") {
+    return res.status(403).json({ error: "Invalid role" });
+  }
 
-        // Send response
-        res.status(200).json({
-            success: true,
-            message: "Signed in successfully!",
-            token,
-            user: {
-                id: user._id,
-                username: user.username,
-                email: user.email,
-                role: user.role,
-                url: user.url, // Ensure `url` exists in your User model
-            },
-        });
-    } catch (e) {
-        console.error("Signin Error:", e.message);
-        res.status(500).json({ error: "Signin failed, please try again." });
-    }
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    return res.status(409).json({ error: "User already exists" });
+  }
+
+  const user = await User.create({ username, email, password, role });
+
+  const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+    expiresIn: "1h",
+  });
+
+  res.cookie("token", token, { httpOnly: true });
+
+  res.status(201).json({
+    success: true,
+    user: {
+      id: user._id,
+      username,
+      email,
+      role,
+    },
+  });
 });
 
 
-router.post("/adduserdata",handleAddUserData);
+router.post("/signin", async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(422).json({ error: "Email and password required" });
+  }
+  const user = await User.findOne({ email });
+  if (!user || !(await user.comparePassword(password))) {
+    return res.status(401).json({ error: "Invalid credentials" });
+  }
+  const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+    expiresIn: "1h",
+  });
+  res.cookie("token", token, { httpOnly: true });
 
-module.exports = router;
+  res.status(200).json({
+    success: true,
+    token,
+    user: {
+      id: user._id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+    },
+  });
+});
+
+
+
+export default router;

@@ -1,71 +1,54 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcrypt')
+import mongoose from 'mongoose';
+import bcrypt from 'bcrypt';
 
-const userSchema = new mongoose.Schema({
-    username:{
-        type:String,
-        unique:true,
-        required:true
+const userSchema = new mongoose.Schema(
+  {
+    username: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true
     },
-    url:{
-        type:String,
-        required:true,
-        unique:true
+
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true
     },
-    email:{
-        type:String,
-        unique:true,
-        required:true
+
+    password: {
+      type: String,
+      required: true
     },
-    password:{
-        type:String,
-        required:true
+
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user"
     },
-    role:{
-        type:String,
-        default:"user"
+
+    notificationsEnabled: {
+      type: Boolean,
+      default: true
     },
-    token:{
-        type:String
+
+    isActive: {
+      type: Boolean,
+      default: true
     }
-})
+  },
+  { timestamps: true }
+);
 
-userSchema.pre('save',function(next){
-    const user = this;
-    if(!user.isModified('password')){
-        return next()
-    }
-    bcrypt.genSalt(10,(err,salt)=>{
-        if(err){
-            return next(err)
-        }
-     bcrypt.hash(user.password,salt,(err,hash)=>{
-         if(err){
-             return next(err)
-         }
-         user.password = hash;
-         next()
-     })
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
+});
 
-    })
+userSchema.methods.comparePassword = function (candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.password);
+};
 
-})
-
-
-userSchema.methods.comparePassword = function(candidatePassword) {
-    const user = this;
-    return new Promise((resolve,reject)=>{
-        bcrypt.compare(candidatePassword,user.password,(err,isMatch)=>{
-            if(err){
-                return reject(err)
-            }
-            if (!isMatch){
-                return reject(err)
-            }
-            resolve(true)
-        })
-    })
-
-}
-
-module.exports = mongoose.model('User',userSchema);
+export default mongoose.model("User", userSchema);

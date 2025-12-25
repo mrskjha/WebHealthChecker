@@ -1,46 +1,53 @@
-const mongoose = require("mongoose");
-const Schema = new mongoose.Schema({
-  url: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  status: {
-    type: String,
-    default: "unknown",
-    enum: ["up", "down", "unknown"],
-  },
-  responseTime: {
-    type: Number,
-    default: 0,
-    min: 0, 
-  },
-  lastChecked: {
-    type: Date,
-    default: Date.now,
-  },
-  alertSent: {
-    type: Boolean,
-    default: false, // Track whether an alert has been sent
-  },
-  siteHistory: [
-    {
-      status: {
-        type: String,
-        required: true,
-        enum: ["up", "down", "unknown"], // Restrict to valid values
-      },
-      responseTime: {
-        type: Number,
-        required: true,
-        min: 0, // Ensure no negative values
-      },
-      checkedAt: {
-        type: Date,
-        default: Date.now,
-      },
-    },
-  ],
-});
 
-module.exports = mongoose.model("site", Schema);
+import mongoose from 'mongoose';
+
+const siteSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true
+    },
+
+    name: {
+      type: String,
+      required: true
+    },
+
+    url: {
+      type: String,
+      required: true
+    },
+
+    status: {
+      type: String,
+      enum: ["up", "down", "unknown"],
+      default: "unknown"
+    },
+
+    responseTime: {
+      type: Number,
+      default: 0
+    },
+
+    lastChecked: {
+      type: Date
+    },
+
+    failureCount: {
+      type: Number,
+      default: 0
+    },
+
+    isActive: {
+      type: Boolean,
+      default: true
+    }
+  },
+  { timestamps: true }
+);
+
+siteSchema.index({ userId: 1, url: 1 }, { unique: true });
+
+export default mongoose.model("Site", siteSchema);

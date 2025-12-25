@@ -1,49 +1,41 @@
-require("dotenv").config();
-const jwt = require("jsonwebtoken");
-const User = require("../model/user");
 
-module.exports = async (req, res, next) => {
+import jwt from "jsonwebtoken";
+import User from "../model/user.js";
+
+
+
+module.exports = async function authenticate(req, res, next) {
   try {
-    // Ensure JWT key is set
-    const jwtKey = process.env.jwtkey; // Use uppercase key for consistency
-    if (!jwtKey) {
-      console.error("JWT_KEY is not defined in the environment variables");
-      return res.status(500).json({ error: "Server configuration error" });
-    }
+    const token =
+      req.cookies?.token ||
+      req.headers.authorization?.split(" ")[1];
 
-    // Get token from cookies
-    let token = req.cookies?.token; // Use optional chaining to prevent errors
-    if (!token && req.headers.authorization?.startsWith("Bearer")) {
-      // Get token from Authorization header
-      token = req.headers.authorization.split(" ")[1];
-      
-    }
     if (!token) {
-      return res.status(401).json({ error: "Unauthorized" });
+      return res.status(401).json({ message: "Authentication required" });
     }
 
-    // Verify token
-    jwt.verify(token, jwtKey, async (err, payload) => {
-      if (err) {
-        console.error("JWT Verification Error:", err.message);
-        return res.status(401).json({ error: "Invalid or expired token" });
-      }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      try {
-        const { userId } = payload;
-        const user = await User.findById(userId);
-        if (!user) {
-          return res.status(401).json({ error: "User not found" });
-        }
-        req.user = user; 
-        next(); 
-      } catch (error) {
-        console.error("Database Error:", error.message);
-        return res.status(500).json({ error: "Internal server error" });
-      }
-    });
-  } catch (error) {
-    console.error("Unexpected Error:", error.message);
-    return res.status(500).json({ error: "Server error" });
+    if (!decoded?.userId) {
+      return res.status(401).json({ message: "Invalid token payload" });
+    }
+
+    const user = await User.findById(decoded.userId)
+      .select("_id email role");
+
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+
+    req.user = {
+      id: user._id,
+      email: user.email,
+      role: user.role
+    };
+
+    next();
+  } catch (err) {
+    console.error("Auth error:", err.message);
+    return res.status(401).json({ message: "Invalid or expired token" });
   }
 };

@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "description": "this is a website health checker is down or not",
   "main": "index.js ",
+  "type":"module",
   "scripts": {
-    "start": "node index.js ",
+    "start": "node index.js",
     "dev": "node index.js",
     "build": "node index.js"
   },

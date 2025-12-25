@@ -1,22 +1,20 @@
-const express = require('express');
-const site = require('../model/site');
-const { handelAddSite, getAllSites, handelResponceTime, handelSiteById,handleEmailsend, handlesiteHistory, handleUserdetail } = require('../Controllers/site.controller');
-const authenticateUser = require('../Middleware/authenticateUser');
-const requiredToken = require('../Middleware/requiredToken');
 
+import express from 'express';
 const router = express.Router();
+import { handelAddSite,getUserSites,getSiteById,deleteSite,getSiteHistory } from '../Controllers/site.controller.js';
+import auth from '../Middleware/authenticateUser.js';
 
-router.post("/site",requiredToken, handelAddSite);
-router.get("/site", getAllSites);
-router.patch("/site/:id", handelResponceTime);
-router.get("/site/:id",requiredToken, handelSiteById);
-router.get("/site/response-time",requiredToken, handelSiteById);
-router.get("/user-detail",requiredToken, handleUserdetail);
+/**
+ * SITE MANAGEMENT (USER)
+ */
+router.post("/", auth, handelAddSite);              // Add new site
+router.get("/", auth, getUserSites);          // Get user's sites
+router.get("/:id", auth, getSiteById);        // Get single site
+router.delete("/:id", auth, deleteSite);      // Remove site
 
-router.post("/sendmail", handleEmailsend);
+/**
+ * SITE HISTORY
+ */
+router.get("/:id/history", auth, getSiteHistory);
 
-router. get('/sitehistory/:id',handlesiteHistory);
-
-
-
-module.exports = router;
+export default router;
