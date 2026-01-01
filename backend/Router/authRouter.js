@@ -15,7 +15,7 @@ router.get("/signout", (req, res) => {
   res.status(200).json({ message: "Signed out successfully!" });
 });
 
-router.get("/me",async (req,res)=>{
+router.get("/me", async (req, res) => {
   const token = req.cookies.token;
   if (!token) {
     return res.status(401).json({ error: "Unauthorized" });
@@ -31,7 +31,6 @@ router.get("/me",async (req,res)=>{
     console.error("Me Error:", err.message);
     res.status(401).json({ error: "Invalid token" });
   }
-  
 });
 
 router.post("/signup", async (req, res) => {
@@ -56,7 +55,12 @@ router.post("/signup", async (req, res) => {
     expiresIn: "1h",
   });
 
-  res.cookie("token", token, { httpOnly: true });
+  res.cookie("token", token, {
+  httpOnly: true,
+  secure: true,      
+  sameSite: "none",  
+  maxAge: 3600000    
+});
 
   res.status(201).json({
     success: true,
@@ -69,7 +73,6 @@ router.post("/signup", async (req, res) => {
   });
 });
 
-
 router.post("/signin", async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
@@ -79,14 +82,20 @@ router.post("/signin", async (req, res) => {
   if (!user || !(await user.comparePassword(password))) {
     return res.status(401).json({ error: "Invalid credentials" });
   }
-  const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+
+  const token = jwt.sign({ userId: user._id }, process.env.jwtkey, {
     expiresIn: "1h",
   });
-  res.cookie("token", token, { httpOnly: true });
+
+  res.cookie("token", token, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+    maxAge: 3600000,
+  });
 
   res.status(200).json({
     success: true,
-    token,
     user: {
       id: user._id,
       username: user.username,
@@ -95,7 +104,5 @@ router.post("/signin", async (req, res) => {
     },
   });
 });
-
-
 
 export default router;
