@@ -7,7 +7,6 @@ import { Site } from "@/types/site";
 import { Globe, Zap, Clock, ExternalLink, Activity } from "lucide-react"; 
 import { useRouter } from "next/navigation";
 
-
 const SitesPage = () => {
   const [siteData, setSiteData] = useState<Site[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,7 +27,6 @@ const SitesPage = () => {
     }
   }, [user?._id]);
 
-
   useEffect(() => {
     if (!isLoggedIn) return;
     fetchSites(true);
@@ -39,27 +37,25 @@ const SitesPage = () => {
   if (!isLoggedIn) return <AuthPrompt />;
   if (loading) return <LoadingSkeleton />;
 
-  
-
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-gray-100 p-16">
+    <div className="min-h-screen bg-[#020617] text-white p-8 md:p-16">
       <div className="max-w-7xl mx-auto pt-20">
         
         {/* Header Section */}
         <header className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6 border-b border-white/10 pb-8">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <Activity className="text-blue-500 w-8 h-8" />
+              <Activity className="text-cyan-400 w-8 h-8" />
               <h1 className="text-4xl font-extrabold tracking-tight text-white">System Pulse</h1>
             </div>
-            <p className="text-gray-400 text-lg">
-              Welcome back, <span className="text-blue-400 font-medium">{user?.username}</span>. Your services are being monitored.
+            <p className="text-slate-400 text-lg">
+              Welcome back, <span className="text-cyan-400 font-medium">{user?.username}</span>. Your services are being monitored.
             </p>
           </div>
           
           <div className="flex items-center gap-3 bg-white/5 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 shadow-xl">
             <span className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-50"></span>
               <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
             </span>
             <span className="text-xs font-semibold uppercase tracking-widest text-green-400">Live Monitoring</span>
@@ -88,20 +84,23 @@ const SiteCard = ({ site }: { site: Site }) => {
   const router = useRouter();
   const isUp = site.status === "up";
 
-
   const handleCardSiteHistory = async (siteId: string) => {
-    
     router.push(`/site/${siteId}/history`);
   };
 
   return (
-    <div className="group relative bg-[#161616] border border-white/5 rounded-2xl p-6 transition-all duration-300 hover:border-blue-500/50 hover:shadow-[0_0_30px_-10px_rgba(59,130,246,0.3)]" onClick={() => handleCardSiteHistory(site._id)}>
+    <div 
+      className="group relative bg-[#161616] border border-white/5 rounded-2xl p-6 transition-all duration-300 hover:border-cyan-400/50 hover:shadow-[0_0_30px_-10px_rgba(14,165,233,0.3)] cursor-pointer"
+      onClick={() => handleCardSiteHistory(site._id)}
+    >
       <div className="flex justify-between items-start mb-6">
-        <div className="p-3 bg-white/5 rounded-xl group-hover:bg-blue-500/10 transition-colors">
-          <Globe className={`w-6 h-6 ${isUp ? "text-blue-400" : "text-red-400"}`} />
+        <div className="p-3 rounded-xl bg-white/5 group-hover:bg-cyan-400/10 transition-colors">
+          <Globe className={`w-6 h-6 ${isUp ? "text-cyan-400" : "text-red-400"}`} />
         </div>
         <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-tighter ${
-          isUp ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"
+          isUp 
+            ? "bg-green-500/10 text-green-400 border border-green-500/20" 
+            : "bg-red-500/10 text-red-400 border border-red-500/20"
         }`}>
           {site.status}
         </span>
@@ -109,27 +108,27 @@ const SiteCard = ({ site }: { site: Site }) => {
 
       <h2 className="text-xl font-bold text-white mb-1 truncate">{site.name}</h2>
       
-      <div className="flex items-center text-gray-500 text-sm mb-6 group-hover:text-gray-300 transition-colors">
+      <div className="flex items-center text-slate-400 text-sm mb-6 group-hover:text-slate-200 transition-colors">
         <span className="truncate">{site.url}</span>
-        <a href={site.url} target="_blank" rel="noreferrer" className="ml-2 hover:text-blue-400">
+        <a href={site.url} target="_blank" rel="noreferrer" className="ml-2 hover:text-cyan-400">
           <ExternalLink size={14} />
         </a>
       </div>
 
       <div className="grid grid-cols-2 gap-4 py-4 border-t border-white/5">
         <div className="flex flex-col">
-          <span className="text-[10px] text-gray-500 uppercase font-bold mb-1 flex items-center gap-1">
+          <span className="text-[10px] text-slate-400 uppercase font-bold mb-1 flex items-center gap-1">
             <Zap size={10} /> Latency
           </span>
-          <span className={`text-lg font-mono font-bold ${site.responseTime > 500 ? 'text-yellow-400' : 'text-blue-400'}`}>
+          <span className={`text-lg font-mono font-bold ${site.responseTime > 500 ? 'text-yellow-400' : 'text-cyan-400'}`}>
             {site.responseTime}<span className="text-xs ml-1">ms</span>
           </span>
         </div>
         <div className="flex flex-col items-end">
-          <span className="text-[10px] text-gray-500 uppercase font-bold mb-1 flex items-center gap-1">
+          <span className="text-[10px] text-slate-400 uppercase font-bold mb-1 flex items-center gap-1">
             <Clock size={10} /> Node ID
           </span>
-          <span className="text-sm font-mono text-gray-400 uppercase">
+          <span className="text-sm font-mono text-slate-400 uppercase">
             #{site._id.slice(-6)}
           </span>
         </div>
@@ -139,23 +138,27 @@ const SiteCard = ({ site }: { site: Site }) => {
 };
 
 const LoadingSkeleton = () => (
-    <div className="min-h-screen bg-[#0a0a0a] p-10 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-            <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
-            <p className="text-blue-500 font-mono text-sm tracking-widest animate-pulse">SYNCHRONIZING...</p>
-        </div>
+  <div className="min-h-screen bg-[#020617] p-10 flex items-center justify-center">
+    <div className="flex flex-col items-center gap-4">
+      <div className="w-12 h-12 border-4 border-cyan-500/20 border-t-cyan-400 rounded-full animate-spin"></div>
+      <p className="text-cyan-400 font-mono text-sm tracking-widest animate-pulse">SYNCHRONIZING...</p>
     </div>
+  </div>
 );
 
 const AuthPrompt = () => (
-    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-6 text-center">
-        <div className="max-w-md p-8 bg-[#161616] rounded-3xl border border-white/5">
-            <Activity className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-white mb-2">Restricted Access</h2>
-            <p className="text-gray-500 mb-6">Please sign in to your account to access the global monitoring network.</p>
-            <button className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition-all">Sign In</button>
-        </div>
+  <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6 text-center">
+    <div className="max-w-md p-8 bg-[#161616] rounded-3xl border border-white/5">
+      <Activity className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+      <h2 className="text-xl font-bold text-white mb-2">Restricted Access</h2>
+      <p className="text-slate-400 mb-6">
+        Please sign in to your account to access the global monitoring network.
+      </p>
+      <button className="w-full py-3 bg-cyan-500 hover:bg-cyan-400 text-black rounded-xl font-bold transition-all">
+        Sign In
+      </button>
     </div>
+  </div>
 );
 
 export default SitesPage;

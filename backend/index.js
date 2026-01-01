@@ -6,12 +6,9 @@ import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 const PORT = process.env.PORT || 5000;
 
-connectDB();
-
-
 
 const corsOptions = {
-  origin: 'http://localhost:3000', 
+  origin: ['http://localhost:3000', 'https://web-health-checker.vercel.app'],
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   credentials: true, 
   optionsSuccessStatus: 200 
@@ -38,6 +35,18 @@ app.use("/api/site", siteRouter);
 import "./Jobs/monitor.job.js"; 
 
 
-app.listen(PORT, () => {
-  console.log(`Server listening on http://localhost:${PORT}`);
-});
+const startServer = async () => {
+  try {
+    await connectDB(); 
+    console.log("Database connected successfully");
+
+    app.listen(PORT, () => {
+      console.log(`Server listening on http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error("Failed to start server:", error.message);
+    process.exit(1); 
+  }
+};
+
+startServer();

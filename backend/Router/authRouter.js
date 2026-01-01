@@ -10,46 +10,6 @@ if (!jwtkey) {
 }
 const router = express.Router();
 
-router.post('/signup', async (req, res) => {
-    const { username, email, password, role,url } = req.body;
-
-    if (!username || !email || !password || !role || !url) {
-        return res.status(422).json({ error: "Please provide all the required fields" });
-    }
-
-    try {
-        // Check for existing user
-        const existingUser = await User.findOne({ $or: [{ username }, { email }] });
-        if (existingUser) {
-            return res.status(409).json({ error: "Username or email already exists" });
-        }
-
-        const user = new User({
-            username,
-            email,
-            password,
-            role,
-            url
-        });
-        await user.save();
-        // Generate JWT token
-        const token = jwt.sign({ userId: user._id }, process.env.jwtkey, { expiresIn: "1h" });
-
-        // Set the token as a cookie
-        res.cookie("token", token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "Strict",
-            maxAge: 3600000,
-        });
-
-        res.status(201).json({ message: "Signed up successfully!", token, success: true, user });
-    } catch (err) {
-        console.error("Signup Error:", err.message);
-        res.status(500).json({ error: "Signup failed, please try again." });
-    }
-});
-
 router.get("/signout", (req, res) => {
   res.clearCookie("token");
   res.status(200).json({ message: "Signed out successfully!" });

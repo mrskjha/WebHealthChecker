@@ -2,33 +2,34 @@
 import Site from '../model/site.js';
 import MonitorHistory from '../model/siteHistory.js';
 import validator from 'validator';
-
+import { checkSite } from "../Services/monitor.service.js";
 
 export async function handelAddSite(req, res) {
   try {
     const { name, url } = req.body;
 
     if (!name || !url) {
-      return res.status(400).json({
-        error: "Name and URL are required"
-      });
+      return res.status(400).json({ error: "Name and URL are required" });
     }
 
     if (!validator.isURL(url)) {
       return res.status(400).json({ error: "Invalid URL" });
     }
 
-    const newSite = new Site({
+    const newSite = await Site.create({
       name,
       url,
-      userId: req.user.id
+      userId: req.user.id,
+      isActive: true,
+      status: "unknown"
     });
 
-    await newSite.save();
+    
+    await checkSite(newSite);
 
     res.status(201).json({
       success: true,
-      site: newSite
+      site: newSite,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });

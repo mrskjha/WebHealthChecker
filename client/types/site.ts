@@ -11,9 +11,16 @@ export const SiteSchema = z.object({
   failureCount: z.number().optional(),
   isActive: z.boolean().optional(),
   lastChecked: z.string().datetime().optional(),
-  createdAt: z.string().datetime(), // Or z.date() if you transform it
-  updatedAt: z.string().datetime(), // Ensure this line exists!
+  createdAt: z.string().datetime(), 
+  updatedAt: z.string().datetime(), 
   __v: z.number().optional(),
 });
 
+export const SiteCreateSchema = z.object({
+  name: z.string(),
+  url: z.string().url(),
+});
+
+
 export type Site = z.infer<typeof SiteSchema>;
+export type SiteCreate = z.infer<typeof SiteCreateSchema>;

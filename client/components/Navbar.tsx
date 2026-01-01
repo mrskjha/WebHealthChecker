@@ -2,15 +2,12 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { Globe, LogOut, Settings, User, Activity, ChevronDown } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/context/AuthContext";
-import { HoveredLink, Menu, MenuItem as BaseMenuItem } from "./ui/navbar-menu";
-
-/* -------------------------------------------------------------------------- */
-/*                                Anim config                                 */
-/* -------------------------------------------------------------------------- */
+import { Menu, MenuItem as BaseMenuItem, HoveredLink } from "./ui/navbar-menu";
 
 const transition = {
   type: "spring",
@@ -21,114 +18,128 @@ const transition = {
   restSpeed: 0.11,
 } as const;
 
-/* -------------------------------------------------------------------------- */
-/*                                   Navbar                                   */
-/* -------------------------------------------------------------------------- */
-
 const Navbar: React.FC<{ className?: string }> = ({ className }) => {
   const [active, setActive] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
   const { user, isLoggedIn, logout, loading } = useAuth();
 
-  // ⛔ Prevent UI flicker / stale username
-  if (loading) return null;
+  // Fixes Hydration Mismatch by waiting for client-side mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted || loading) return null;
 
   return (
-    <div className={cn("fixed top-6 inset-x-0 max-w-5xl mx-auto z-50", className)}>
+    <div className={cn("fixed top-6 inset-x-0 max-w-5xl mx-auto z-[100] px-4", className)}>
       <Menu setActive={setActive}>
-        {/* ---------------- Dashboard ---------------- */}
-        <Link href="/">
-          <BaseMenuItem
-            setActive={setActive}
-            active={active}
-            value="Dashboard"
-            item="Dashboard"
-          />
+        <Link href="/" className="flex items-center gap-2 mr-6 group">
+          <div className="w-8 h-8 rounded-xl bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20 group-hover:border-cyan-500/50 transition-all duration-300">
+            <Globe className="w-4 h-4 text-cyan-400 group-hover:rotate-12 transition-transform" />
+          </div>
+          <span className="text-sm font-black tracking-tighter text-white">
+            WEBHEALTH
+          </span>
         </Link>
 
-        {/* ---------------- Monitoring ---------------- */}
-        {isLoggedIn && (
-          <MenuItemWithDropdown
-            setActive={setActive}
-            active={active}
-            value="Monitoring"
-            item="Monitoring"
-          >
-            <div className="flex flex-col space-y-3 text-sm min-w-[120px]">
-              <HoveredLink href="/site">My Sites</HoveredLink>
-              <HoveredLink href="/add-site">Add Site</HoveredLink>
-              <HoveredLink href="/uptime">Uptime</HoveredLink>
-            </div>
-          </MenuItemWithDropdown>
-        )}
+        {/* --- Navigation Links --- */}
+        <div className="flex items-center gap-2">
+          <Link href="/">
+            <BaseMenuItem
+              setActive={setActive}
+              active={active}
+              value="Dashboard"
+              item="Dashboard"
+            />
+          </Link>
 
-        {/* ---------------- Reports ---------------- */}
-        {isLoggedIn && (
-          <MenuItemWithDropdown
-            setActive={setActive}
-            active={active}
-            value="Reports"
-            item="Reports"
-          >
-            <div className="flex flex-col space-y-3 text-sm min-w-[140px]">
-              <HoveredLink href="/response-time">Response Time</HoveredLink>
-              <HoveredLink href="/history">Incident History</HoveredLink>
-            </div>
-          </MenuItemWithDropdown>
-        )}
-
-        {/* ---------------- Auth / Profile ---------------- */}
-        {!isLoggedIn ? (
-          <MenuItemWithDropdown
-            setActive={setActive}
-            active={active}
-            value="Account"
-            item="Account"
-          >
-            <div className="flex flex-col space-y-3 text-sm min-w-[120px]">
-              <HoveredLink href="/login">Login</HoveredLink>
-              <HoveredLink href="/signup">Create Account</HoveredLink>
-            </div>
-          </MenuItemWithDropdown>
-        ) : (
-          <MenuItemWithDropdown
-            setActive={setActive}
-            active={active}
-            value="Profile"
-            item={
-              <div className="flex items-center gap-2 cursor-pointer">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center font-bold shadow-md">
-                  {user?.username?.charAt(0).toUpperCase() || "U"}
+          {isLoggedIn && (
+            <MenuItemWithDropdown
+              setActive={setActive}
+              active={active}
+              value="Monitoring"
+              item={
+                <div className="flex items-center gap-1">
+                  Monitoring <ChevronDown className="w-3 h-3 opacity-50" />
                 </div>
-                <span className="text-sm font-medium">
-                  {user?.username}
-                </span>
+              }
+            >
+              <div className="flex flex-col space-y-3 text-sm min-w-[150px]">
+                <HoveredLink href="/site" className="flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-cyan-500" /> My Sites
+                </HoveredLink>
+                <HoveredLink href="/add-site">Add New Site</HoveredLink>
+                <HoveredLink href="/uptime">Detailed Uptime</HoveredLink>
               </div>
-            }
-          >
-            <div className="flex flex-col space-y-3 text-sm min-w-[140px]">
-              <HoveredLink href="/profile">My Profile</HoveredLink>
-              <HoveredLink href="/settings">Settings</HoveredLink>
+            </MenuItemWithDropdown>
+          )}
+        </div>
 
-              <div className="pt-2 border-t border-gray-200 dark:border-white/10">
-                <button
-                  onClick={logout}
-                  className="text-left text-red-500 hover:text-red-600 transition-colors w-full"
-                >
-                  Logout
+        {/* --- Auth / User Profile Section --- */}
+        <div className="ml-auto flex items-center gap-4">
+          {!isLoggedIn ? (
+            <div className="flex items-center gap-4">
+              <Link 
+                href="/login" 
+                className="text-sm font-medium text-slate-400 hover:text-white transition-colors"
+              >
+                Sign In
+              </Link>
+              <Link href="/sign-up">
+                <button className="bg-white text-[#020617] px-5 py-2 rounded-full text-xs font-bold hover:bg-cyan-400 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_25px_rgba(6,182,212,0.4)]">
+                  Join Free
                 </button>
-              </div>
+              </Link>
             </div>
-          </MenuItemWithDropdown>
-        )}
+          ) : (
+            <MenuItemWithDropdown
+              setActive={setActive}
+              active={active}
+              value="Profile"
+              item={
+                <div className="flex items-center gap-2 cursor-pointer group pl-2 border-l border-white/10">
+                  <div className="w-8 h-8 rounded-full border border-cyan-500/30 bg-slate-900 flex items-center justify-center group-hover:border-cyan-400 transition-all">
+                     <span className="text-[10px] font-black text-cyan-400">
+                        {user?.username?.substring(0, 2).toUpperCase() || "US"}
+                     </span>
+                  </div>
+                  <span className="text-sm font-medium text-slate-300 group-hover:text-white transition-colors">
+                    {user?.username}
+                  </span>
+                </div>
+              }
+            >
+              <div className="flex flex-col space-y-3 text-sm min-w-[180px]">
+                <div className="px-2 py-1.5 mb-2 border-b border-white/5">
+                    <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Personal Account</p>
+                    <p className="text-xs text-white truncate">{user?.email}</p>
+                </div>
+                <HoveredLink href="/profile" className="flex items-center gap-2">
+                   <User className="w-4 h-4 opacity-70" /> Account Settings
+                </HoveredLink>
+                <HoveredLink href="/settings" className="flex items-center gap-2">
+                   <Settings className="w-4 h-4 opacity-70" /> Preferences
+                </HoveredLink>
+
+                <div className="pt-2 mt-2 border-t border-white/10">
+                  <button
+                    onClick={logout}
+                    className="flex items-center gap-2 text-left text-red-400 hover:text-red-300 transition-colors w-full px-2 py-1.5 rounded-lg hover:bg-red-500/5"
+                  >
+                    <LogOut className="w-4 h-4" /> Sign Out
+                  </button>
+                </div>
+              </div>
+            </MenuItemWithDropdown>
+          )}
+        </div>
       </Menu>
     </div>
   );
 };
 
-export default Navbar;
-
 /* -------------------------------------------------------------------------- */
-/*                        Menu Item With Dropdown                              */
+/* Dropdown Logic                                                             */
 /* -------------------------------------------------------------------------- */
 
 const MenuItemWithDropdown: React.FC<{
@@ -152,33 +163,42 @@ const MenuItemWithDropdown: React.FC<{
   }, []);
 
   return (
-    <div ref={ref} className="relative">
+    <div 
+      ref={ref} 
+      className="relative"
+      onMouseEnter={() => {
+        setActive(value);
+        setOpen(true);
+      }}
+      onMouseLeave={() => setOpen(false)}
+    >
       <div
-        onClick={() => {
-          setActive(value);
-          setOpen((prev) => !prev);
-        }}
         className={cn(
-          "cursor-pointer px-4 py-2",
-          active === value && "font-semibold"
+          "cursor-pointer px-3 py-2 text-sm font-medium transition-all duration-300 rounded-lg",
+          active === value ? "text-cyan-400 bg-white/5" : "text-slate-400 hover:text-white hover:bg-white/5"
         )}
       >
         {item}
       </div>
 
-      {open && children && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 8 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: 8 }}
-          transition={transition}
-          className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50"
-        >
-          <div className="rounded-2xl bg-white dark:bg-black shadow-xl border border-black/10 dark:border-white/10 p-4">
-            {children}
-          </div>
-        </motion.div>
-      )}
+      <AnimatePresence>
+        {open && children && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            transition={transition}
+            className="absolute top-full left-1/2 -translate-x-1/2 mt-3 z-[110]"
+          >
+            <div className="rounded-[1.5rem] bg-slate-900/80 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 p-5 min-w-[200px]">
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent" />
+              {children}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
+
+export default Navbar;

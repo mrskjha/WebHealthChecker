@@ -32,6 +32,11 @@ export async function getSiteHistory(siteId: string) {
   return res.data;
 }
 
+export async function addSite(payload: { name: string; url: string }) {
+  const res = await api.post("/site", payload);
+  return res.data;
+}
+
 // ---------- Auth APIs ----------
 export interface LoginResponse {
   success: boolean;
@@ -62,6 +67,35 @@ export async function loginUser(
     };
   }
 
+  return data;
+}
+
+export interface SignupResponse {
+  success: boolean;
+  error?: string;
+}
+
+//  SIGNUP (backend sets httpOnly cookie)
+export async function signupUser(
+  payload: z.infer<typeof loginSchema>
+): Promise<SignupResponse> {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/signup`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include", 
+      body: JSON.stringify(payload),
+    }
+  );
+  const data = await response.json();
+
+  if (!response.ok) {
+    return {
+      success: false,
+      error: data.error || "Signup failed",
+    };
+  }
   return data;
 }
 

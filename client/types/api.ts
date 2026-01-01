@@ -11,6 +11,6 @@ export const SiteListResponseSchema = z.object({
       createdAt: true,
       updatedAt: true, 
       responseTime: true,
-    }).passthrough() // This tells Zod: "Select these, but don't blow up if there are others"
+    }).passthrough()
   ),
 });
