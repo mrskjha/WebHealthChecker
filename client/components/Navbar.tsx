@@ -20,15 +20,10 @@ const transition = {
 
 const Navbar: React.FC<{ className?: string }> = ({ className }) => {
   const [active, setActive] = useState<string | null>(null);
-  const [mounted, setMounted] = useState(false);
+
   const { user, isLoggedIn, logout, loading } = useAuth();
 
-  // Fixes Hydration Mismatch by waiting for client-side mount
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
-  if (!mounted || loading) return null;
 
   return (
     <div className={cn("fixed top-6 inset-x-0 max-w-5xl mx-auto z-[100] px-4", className)}>
