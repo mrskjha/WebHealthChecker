@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -14,54 +14,64 @@ const transition = {
 } as const;
 
 // ---------- MenuItem ----------
-interface MenuItemProps {
+export const MenuItem = ({
+  setActive,
+  active,
+  item,
+  children,
+}: {
   setActive: (item: string | null) => void;
   active: string | null;
-  item: string | React.ReactNode;
-  value?: string;
+  item: string;
   children?: React.ReactNode;
-}
-
-export const MenuItem: React.FC<MenuItemProps> = ({ setActive, active, item, value, children }) => {
-  const key = value ?? (typeof item === "string" ? item : null);
-  const isActive = key != null && active === key;
-
+}) => {
   return (
-    <div
-      onMouseEnter={() => setActive(key)}
-      onMouseLeave={() => setActive(null)}
-      className="flex relative px-4 py-2 cursor-pointer select-none text-neutral-700 dark:text-neutral-200 hover:text-black transition-colors"
-    >
-      {item}
-
-      {children && isActive && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.85, y: 10 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.85, y: 10 }}
-          transition={transition}
-          className="absolute top-full mt-2 left-1/2 -translate-x-1/2 z-50"
-        >
-          <div className="bg-red-800 dark:bg-black backdrop-blur-sm rounded-2xl overflow-hidden border border-black/20 dark:border-white/20 shadow-xl p-4">
-            {children}
-          </div>
-        </motion.div>
+    <div onMouseEnter={() => setActive(item)} className="relative ">
+      <motion.p
+        transition={{ duration: 0.3 }}
+        className="cursor-pointer text-black hover:opacity-[0.9] dark:text-white"
+      >
+        {item}
+      </motion.p>
+      {active !== null && (
+        <AnimatePresence>
+          {active === item && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.85, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.85, y: 10 }}
+              transition={transition}
+              className="absolute top-[calc(100%_+_1.2rem)] left-1/2 -translate-x-1/2 pt-4"
+            >
+              <motion.div
+                transition={transition}
+                layoutId="active" // smooth transition between tabs
+                className="bg-white dark:bg-slate-900 backdrop-blur-sm rounded-2xl overflow-hidden border border-black/[0.2] dark:border-white/[0.2] shadow-xl"
+              >
+                <motion.div layout className="w-max h-full p-4">
+                  {children}
+                </motion.div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       )}
     </div>
   );
 };
 
 // ---------- Menu ----------
-interface MenuProps {
+export const Menu = ({
+  setActive,
+  children,
+}: {
   setActive: (item: string | null) => void;
   children: React.ReactNode;
-}
-
-export const Menu: React.FC<MenuProps> = ({ setActive, children }) => {
+}) => {
   return (
     <nav
-      onMouseLeave={() => setActive(null)}
-      className="relative rounded-full border border-transparent dark:bg-black dark:border-white/20 bg-white shadow-input flex justify-center space-x-4 px-8 py-6"
+      onMouseLeave={() => setActive(null)} // resets state when leaving the entire bar
+      className="relative rounded-full border border-transparent dark:bg-slate-900/80 dark:border-white/[0.2] bg-white/80 backdrop-blur-md shadow-input flex justify-center space-x-4 px-8 py-4 "
     >
       {children}
     </nav>
@@ -69,29 +79,45 @@ export const Menu: React.FC<MenuProps> = ({ setActive, children }) => {
 };
 
 // ---------- ProductItem ----------
-interface ProductItemProps {
+export const ProductItem = ({
+  title,
+  description,
+  href,
+  src,
+}: {
   title: string;
   description: string;
   href: string;
   src: string;
-}
-
-export const ProductItem: React.FC<ProductItemProps> = ({ title, description, href, src }) => {
+}) => {
   return (
-    <Link href={href} className="flex space-x-2">
-      <Image src={src} width={140} height={70} alt={title} className="flex-shrink-0 rounded-md shadow-2xl" />
+    <Link href={href} className="flex space-x-2 group/product">
+      <Image
+        src={src}
+        width={140}
+        height={70}
+        alt={title}
+        className="flex-shrink-0 rounded-md shadow-2xl group-hover/product:scale-105 transition-transform duration-200"
+      />
       <div>
-        <h4 className="text-xl font-bold mb-1 text-black dark:text-white">{title}</h4>
-        <p className="text-neutral-700 text-sm max-w-[10rem] dark:text-neutral-300">{description}</p>
+        <h4 className="text-xl font-bold mb-1 text-black dark:text-white">
+          {title}
+        </h4>
+        <p className="text-neutral-700 text-sm max-w-[10rem] dark:text-neutral-300">
+          {description}
+        </p>
       </div>
     </Link>
   );
 };
 
 // ---------- HoveredLink ----------
-export const HoveredLink: React.FC<React.ComponentProps<typeof Link>> = ({ children, ...rest }) => {
+export const HoveredLink = ({ children, ...rest }: any) => {
   return (
-    <Link {...rest} className="text-neutral-700  dark:text-neutral-200 hover:text-black transition-colors">
+    <Link
+      {...rest}
+      className="text-neutral-700 dark:text-neutral-200 hover:text-cyan-500 transition-colors duration-200"
+    >
       {children}
     </Link>
   );
